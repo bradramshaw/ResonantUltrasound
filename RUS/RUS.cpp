@@ -1,6 +1,5 @@
 // RUS.cpp : Defines the entry point for the console application.
 //
-
 #include "stdafx.h"
 using namespace std;
 
@@ -13,7 +12,7 @@ static const double c66 = 95e+9;
 static const double c12 = 132e+9;
 static const double c13 = 71e+9;
 static const double c23 = 95e+9;
-asdf;
+
 static const double density = 6394;
 
 static const double xHL = 0.000515;
