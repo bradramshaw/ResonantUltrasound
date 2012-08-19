@@ -31,7 +31,6 @@ int _tmain(int argc, _TCHAR* argv[])
 	double **** ctens = initElasticConstants();
 
 	while(true){
-	
 		
 		
 		int order;
