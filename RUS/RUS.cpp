@@ -24,60 +24,15 @@ int parity(int k, int l, int m, int coord);
 int compPnumb(const void * b1, const void * b2);
 double integrateBasis(Basis::basisFunction * b1, Basis::basisFunction * b2, double xmax, double ymax, double zmax);
 double integrateGradBasis(Basis::basisFunction * b1, Basis::basisFunction * b2, int d1, int d2, double xmax, double ymax, double zmax);
+double **** initElasticConstants();
 
 int _tmain(int argc, _TCHAR* argv[])
 {
-	char b;
+	double **** ctens = initElasticConstants();
+
 	while(true){
 	
-		double **** ctens;
-		ctens = new double***[3];
-		for(int i = 0; i <3; i++){
-			ctens[i] = new double**[3];
-				for(int j = 0; j<3; j++){
-					ctens[i][j] = new double*[3];
-					for(int k = 0; k<3; k++){
-						ctens[i][j][k] = new double[3];
-					}
-				}
-		}
-
-
-		for(int i = 0; i < 3; i++){
-			for(int j = 0; j<3; j++){
-				for(int k = 0; k<3; k++){
-					for(int l = 0; l<3; l++){
-						ctens[i][j][k][l] = 0;
-					}
-				}
-			}
-		}
-
-		ctens[0][0][0][0] = c11;
-	    ctens[0][0][1][1] = c12;
-		ctens[1][1][0][0] = c12;
-		ctens[0][0][2][2] = c13;
-		ctens[2][2][0][0] = c13;
-		ctens[1][1][1][1] = c22;
-		ctens[2][2][2][2] = c33;
-		ctens[2][2][1][1] = c23;
-		ctens[1][1][2][2] = c23;
-
-		ctens[1][2][1][2] = c44;
-		ctens[2][1][2][1] = c44;
-		ctens[2][1][1][2] = c44;
-		ctens[1][2][2][1] = c44;
 		
-		ctens[2][0][2][0] = c55;
-		ctens[0][2][2][0] = c55;
-		ctens[0][2][0][2] = c55;
-		ctens[2][0][0][2] = c55;
-
-		ctens[0][1][0][1] = c66;
-		ctens[1][0][0][1] = c66;
-		ctens[0][1][1][0] = c66;
-		ctens[1][0][1][0] = c66;
-
 		
 		int order;
 		cout << "Highest polynomial order? ";
@@ -345,4 +300,56 @@ double integrateGradBasis(Basis::basisFunction * b1, Basis::basisFunction * b2, 
 	intVal *= (1/(powers[0]+1)*pow(xmax,powers[0]+1))*(1/(powers[1]+1)*pow(ymax,powers[1]+1))*(1/(powers[2]+1)*pow(zmax,powers[2]+1));
 	
 	return intVal;
+}
+
+double **** initElasticConstants(){
+	double **** ctens;
+		ctens = new double***[3];
+		for(int i = 0; i <3; i++){
+			ctens[i] = new double**[3];
+				for(int j = 0; j<3; j++){
+					ctens[i][j] = new double*[3];
+					for(int k = 0; k<3; k++){
+						ctens[i][j][k] = new double[3];
+					}
+				}
+		}
+
+
+		for(int i = 0; i < 3; i++){
+			for(int j = 0; j<3; j++){
+				for(int k = 0; k<3; k++){
+					for(int l = 0; l<3; l++){
+						ctens[i][j][k][l] = 0;
+					}
+				}
+			}
+		}
+
+		ctens[0][0][0][0] = c11;
+	    ctens[0][0][1][1] = c12;
+		ctens[1][1][0][0] = c12;
+		ctens[0][0][2][2] = c13;
+		ctens[2][2][0][0] = c13;
+		ctens[1][1][1][1] = c22;
+		ctens[2][2][2][2] = c33;
+		ctens[2][2][1][1] = c23;
+		ctens[1][1][2][2] = c23;
+
+		ctens[1][2][1][2] = c44;
+		ctens[2][1][2][1] = c44;
+		ctens[2][1][1][2] = c44;
+		ctens[1][2][2][1] = c44;
+		
+		ctens[2][0][2][0] = c55;
+		ctens[0][2][2][0] = c55;
+		ctens[0][2][0][2] = c55;
+		ctens[2][0][0][2] = c55;
+
+		ctens[0][1][0][1] = c66;
+		ctens[1][0][0][1] = c66;
+		ctens[0][1][1][0] = c66;
+		ctens[1][0][1][0] = c66;
+
+		return ctens;
 }
