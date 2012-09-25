@@ -63,23 +63,6 @@ int _tmain(int argc, _TCHAR* argv[])
 		 
 		qsort(bFunctions, R, sizeof(Basis::basisFunction), compPnumb);
 				
-	/*	double ** emat;
-		emat = new double*[R];
-		for(int i = 0; i < R; i++){
-		emat[i] = new double[R];
-		}
-		
-		for(int i = 0; i < R; i++){
-			for(int j = 0; j < R; j++){
-				if(bFunctions[i].coord == bFunctions[j].coord){
-					emat[i][j] =  15467*integrateBasis(&bFunctions[i],&bFunctions[j], 0.0023724, 0.00242095, 0.001885);
-				}
-				else{
-					emat[i][j] = 0;
-				}
-			}
-		}*/
-		
 		double * emat;
 		emat = new double[R*R];
 	
@@ -96,18 +79,7 @@ int _tmain(int argc, _TCHAR* argv[])
 				}
 			}
 		}
-	/*	std::ofstream out;
-		out.open("emat.dat",std::ios_base::beg);
-		out.precision(15);
-		int index = 0;
-		for(int i = 0; i < R; i++){
-			for(int j = 0; j<R; j++){
-			out<<emat[index]<<"\t";
-			index++;
-			}
-			out<<"\n";
-		}
-		out.close();*/
+	
 		
 		double * gmat;
 		gmat = new double[R*R];
@@ -126,19 +98,6 @@ int _tmain(int argc, _TCHAR* argv[])
 			}
 		}
 
-
-		//std::ofstream out2;
-		//out2.open("gmat.dat",std::ios_base::beg);
-		//out2.precision(15);
-		//int index2 = 0;
-		//for(int i = 0; i < R; i++){
-		//	for(int j = 0; j<R; j++){
-		//	out2<<gmat[index2]<<"\t";
-		//	index2++;
-		//	}
-		//	out2<<"\n";
-		//}
-		//out2.close();
 
 		lapack_int ch0 = LAPACKE_dpotrf(LAPACK_ROW_MAJOR, 'U', R, emat, R);
 		lapack_int ch = LAPACKE_dsygst(LAPACK_ROW_MAJOR, 1,'U', R, gmat, R, emat,R);
@@ -167,35 +126,6 @@ int _tmain(int argc, _TCHAR* argv[])
 		}
 		out3.close();*/
 
-	//	int info = 0;
-//		const char d = 'U';
-//		const int N = 3;
-
-
-//		lapack_int ch = LAPACKE_dpotrf(LAPACK_ROW_MAJOR, 'U', 3, mat, 3);
-	//	lapack_int inv = LAPACKE_dpotri(LAPACK_ROW_MAJOR, 'U', 3, mat, 3);
-		 
-		/*double amat[3][3] = {{0,1,3},{1,3,2},{3,2,-1}};
-		double bmat[3][3] = {{5,-2,1},{-2,7,2},{1,2,6}};
-
-
-
-		for(int i = 0; i < 3; i++){
-			for(int j = 0; j < 3; j++){
-				cout<<bmat[i][j]<<" ";
-			}
-		}
-		
-		
-
-		lapack_int ch3 = LAPACKE_dpotrf(LAPACK_ROW_MAJOR, 'U', 3, bmat[0], 3);
-		
-			for(int i = 0; i < 3; i++){
-						for(int j = 0; j < 3; j++){
-							cout<<bmat[i][j]<<" ";
-						}
-			}*/
-		
 		delete[] emat;
 		delete[] gmat;
 		delete[] w;
