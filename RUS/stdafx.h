@@ -10,12 +10,11 @@
 #include <mkl.h>
 #include "mkl_vsl.h"
 #include "mkl_vsl_functions.h"
-#include "targetver.h"
 #include "mkl_lapacke.h"
+
 #include <afxwin.h>
 
 #include <fstream>
-
 #include <stdio.h>
 #include <tchar.h>
 #include <iostream>
@@ -28,4 +27,6 @@
 #include <algorithm>
 
 #include "basis.h"
+#include "DataExtractor.h"
+
 // TODO: reference additional headers your program requires here

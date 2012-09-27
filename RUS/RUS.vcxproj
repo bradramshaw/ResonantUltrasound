@@ -93,11 +93,15 @@
     <None Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="ArrayAllocator.h" />
     <ClInclude Include="basis.h" />
+    <ClInclude Include="DataExtractor.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="ArrayAllocator.cpp" />
+    <ClCompile Include="DataExtractor.cpp" />
     <ClCompile Include="RUS.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
