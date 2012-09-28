@@ -26,6 +26,9 @@ int compPnumb(const void * b1, const void * b2); //comparitor for parity numbers
 double integrateBasis(Basis::basisFunction * b1, Basis::basisFunction * b2, double xmax, double ymax, double zmax); // This integrates  a pair of basis functions within the limits specified. Note that this assumes a parallelapiped, and takes "half" dimensions as inputs
 double integrateGradBasis(Basis::basisFunction * b1, Basis::basisFunction * b2, int d1, int d2, double xmax, double ymax, double zmax); // integrates basis functions after differentiating with respect to one coordinate in each basis function of the pair. 
 double **** initElasticConstants(); //initialize the full tensor. 
+Basis::basisFunction * createBasis(int order);
+double * calcEmat(int order,Basis::basisFunction * bFunctions);
+double * calcGmat(int order, Basis::basisFunction * bFunctions, double **** ctens);
 
 int _tmain(int argc, _TCHAR* argv[]) //main function
 {
@@ -34,13 +37,20 @@ int _tmain(int argc, _TCHAR* argv[]) //main function
 	double **** ctens = initElasticConstants(); // 4 dimensional elastic constant array. can probably be simpler (obviously)
 
 	while(true){ // bad programming...
+
+		VSLStreamStatePtr stream;
+		SYSTEMTIME t;
+	GetLocalTime(&t);
+	vslNewStream( & stream, VSL_BRNG_SFMT19937, t.wMilliseconds );
+	double randNum;
+	for(int i = 0; i < 20; i++){
+	vdRngUniform(VSL_RNG_METHOD_UNIFORM_STD, stream, 1, &randNum, 0, 5);
+	 cout<< randNum<<endl;
+	}
+
 		DataExtractor extractor("E:/Users/Brad/Documents/GitHub/ResonantUltrasound/RUS/IsotropicCuboid.dat");
 		double * data = extractor.getDataArray();
 		int nPoints = extractor.getNumberOfLines();
-
-		for(int i = 0; i <nPoints; i++){
-		cout<<data[i]<<endl;
-		}
 	
 		int order; // will store the max order of the polynomials to use
 		cout << "Highest polynomial order? ";
@@ -49,73 +59,22 @@ int _tmain(int argc, _TCHAR* argv[]) //main function
 		int R = 3 * (order+1) * (order+2) * (order+3) / 6; // total dimension of the matrices 
 		cout << "R = " << R<<endl; // output that dimension to the user
 
-		QueryPerformanceCounter(&time1);
-		Basis::basisFunction * bFunctions = (Basis::basisFunction *) malloc(R * sizeof(Basis::basisFunction)); // allocates memory for the basis functions, of which there are R
-		int basisPoint = 0; //basis functions, say p_i, are repeated for the x, y, and z coordinates. So we have p_i for x, for y, and for z. basisPoint is the "i" index in this notation.
+	QueryPerformanceCounter(&time1);
+		Basis::basisFunction * bFunctions = createBasis(order);
+	QueryPerformanceCounter(&time2);
+	cout<<"Time to create basis: "<<1000*(double)(time2.QuadPart-time1.QuadPart)/(freq.QuadPart)<<"ms"<<endl<<endl;
 
-		for(int k = 0; k <= order ; k++){  // k, l, and m are the powers for x, y, and z. 
-			for(int l = 0; l <= order; l++){ // maximum size for any of k, l, and m is the order (x^4 is highest x power for 4th order, for example)
-				for(int m = 0; m <= order; m++){
-					if(k + l + m <= order){ // the sum of k, l, and m must be less than the order ( x*y*z^2 is 4th order)
-						for(int i = 0; i<3; i++){ // i is for each of the three coordinates that each basis function is repeated for. The function is the same for each.
-							bFunctions[basisPoint+i].xk = k;
-							bFunctions[basisPoint+i].yl = l;
-							bFunctions[basisPoint+i].zm = m;
-
-							bFunctions[basisPoint+i].coord = i; // whether this particular basis function belongs to x, y, or z.
-							bFunctions[basisPoint+i].pnumb = parity(k,l,m, i); //calls the partity function to determine the parity. see albert's paper.
-						}
-					basisPoint += 3; // skip ahead three in the array because basis functions come in triplets (one for each coordinate). 
-					}
-				}
-			}
-		}
-		 
-		QueryPerformanceCounter(&time2);
-		cout<<"Time to create basis: "<<1000*(double)(time2.QuadPart-time1.QuadPart)/(freq.QuadPart)<<"ms"<<endl<<endl;
-
-		qsort(bFunctions, R, sizeof(Basis::basisFunction), compPnumb); // there are eight possible parities, and the basis functions are labled as such. This sorts them using the comparator compPnumb
+		 // there are eight possible parities, and the basis functions are labled as such. This sorts them using the comparator compPnumb
 				
-		QueryPerformanceCounter(&time1);	
-		double * emat; //pointer to the kinetic energy matrix. uses attrocious Fortran storage format (one-dimensional continuous array for a matrix...) for matrices because that's what Lapack wants.
-		emat = new double[R*R]; // total size is of course the dimension squared.
+	QueryPerformanceCounter(&time1);	
+		double * emat = calcEmat(order, bFunctions);
+	QueryPerformanceCounter(&time2);
+	cout<<"Time to create emat: "<<1000*(double)(time2.QuadPart-time1.QuadPart)/(freq.QuadPart)<<"ms"<<endl<<endl;
 	
-		for(int i = 0; i < R; i++){  //calculates the kinetic energy matrix. 
-			for(int j = i; j < R; j++){ // only calculates the upper-triangle, sine this is of course symmetric
-				if(bFunctions[i].coord == bFunctions[j].coord){ // only basis functions belonging to the same coordinate contribute (each coordinate is a displacement direction, and each basis function part of an expansion of the displacement. kinetic energy obviously doesn't mix these). 
-					double kinteticE = density*integrateBasis(&bFunctions[i],&bFunctions[j], xHL, yHL, zHL); // integrate these across the sample and multiply by the density to get the kinteic energy
-					emat[R*i+j] =  kinteticE; // because this is a 1-D array, we have to be tricky in how we store it. i am storing both the upper and lower part
-					emat[R*j+i] =  kinteticE; // lower part
-				}
-				else{
-					emat[R*i+j] = 0; //should innitialize whole thing to zero and not deal with these cases explicitly. 
-					emat[R*j+i] = 0;
-				}
-			}
-		}
-		QueryPerformanceCounter(&time2);
-		cout<<"Time to create emat: "<<1000*(double)(time2.QuadPart-time1.QuadPart)/(freq.QuadPart)<<"ms"<<endl<<endl;
-	
-		QueryPerformanceCounter(&time1);
-		double * gmat; // potential energy matrix. This is more complicated beacuse it depends on gradients 
-		gmat = new double[R*R]; // same size of course. 
-	
-		//again, this is symmetric, so only calculate the upper half part and just duplicate
-		for(int i = 0; i < R; i++){
-			for(int j = i; j < R; j++){ 
-				
-				double tempSum = 0; // this is a sum of many terms; this is the storage variable
-				for(int k = 0; k<3; k++){
-					for(int l = 0; l < 3; l++){ // the elastic tensor is 4 dimensional. two coordinates come from the displacement directions the basis functions belong to, and the other two are the directions the derivatives are beign taken in. 
-						tempSum += ctens[bFunctions[i].coord][k][bFunctions[j].coord][l]*integrateGradBasis(&bFunctions[i],&bFunctions[j],k,l, xHL, yHL, zHL); //this just stupidly tries all of them, even though many are zero.
-					}
-				}
-				gmat[i*R+j] = tempSum; // set upper and lower part of the matrix to the sum of the components. 
-				gmat[j*R+i] = tempSum;
-			}
-		}
-		QueryPerformanceCounter(&time2);
-		cout<<"Time to create gmat: "<<1000*(double)(time2.QuadPart-time1.QuadPart)/(freq.QuadPart)<<"ms"<<endl<<endl;
+	QueryPerformanceCounter(&time1);
+		double * gmat =  calcGmat(order,  bFunctions,  ctens);
+	QueryPerformanceCounter(&time2);
+	cout<<"Time to create gmat: "<<1000*(double)(time2.QuadPart-time1.QuadPart)/(freq.QuadPart)<<"ms"<<endl<<endl;
 
 		QueryPerformanceCounter(&time1);
 		lapack_int ch0 = LAPACKE_dpotrf(LAPACK_ROW_MAJOR, 'U', R, emat, R); // this performs a cholesky decomposition on the kinetic matrix. result is stored in emat (cholesky decomposition on A gives A = L L*, where L is lower triangular. Only Hermitian matrices need apply)
@@ -164,6 +123,80 @@ int _tmain(int argc, _TCHAR* argv[]) //main function
 		}
 	return 0;
 }
+
+double * calcGmat(int order, Basis::basisFunction * bFunctions, double **** ctens){
+		int R = 3 * (order+1) * (order+2) * (order+3) / 6;
+		double * gmat; // potential energy matrix. This is more complicated beacuse it depends on gradients 
+		gmat = new double[R*R]; // same size of course. 
+	
+		//again, this is symmetric, so only calculate the upper half part and just duplicate
+		for(int i = 0; i < R; i++){
+			for(int j = i; j < R; j++){ 
+				
+				double tempSum = 0; // this is a sum of many terms; this is the storage variable
+				for(int k = 0; k<3; k++){
+					for(int l = 0; l < 3; l++){ // the elastic tensor is 4 dimensional. two coordinates come from the displacement directions the basis functions belong to, and the other two are the directions the derivatives are beign taken in. 
+						tempSum += ctens[bFunctions[i].coord][k][bFunctions[j].coord][l]*integrateGradBasis(&bFunctions[i],&bFunctions[j],k,l, xHL, yHL, zHL); //this just stupidly tries all of them, even though many are zero.
+					}
+				}
+				gmat[i*R+j] = tempSum; // set upper and lower part of the matrix to the sum of the components. 
+				gmat[j*R+i] = tempSum;
+			}
+		}
+		return gmat;
+}
+
+
+
+double * calcEmat(int order, Basis::basisFunction * bFunctions){
+
+	int R = 3 * (order+1) * (order+2) * (order+3) / 6;
+	double * emat; //pointer to the kinetic energy matrix. uses attrocious Fortran storage format (one-dimensional continuous array for a matrix...) for matrices because that's what Lapack wants.
+		emat = new double[R*R]; // total size is of course the dimension squared.
+	
+		for(int i = 0; i < R; i++){  //calculates the kinetic energy matrix. 
+			for(int j = i; j < R; j++){ // only calculates the upper-triangle, sine this is of course symmetric
+				if(bFunctions[i].coord == bFunctions[j].coord){ // only basis functions belonging to the same coordinate contribute (each coordinate is a displacement direction, and each basis function part of an expansion of the displacement. kinetic energy obviously doesn't mix these). 
+					double kinteticE = density*integrateBasis(&bFunctions[i],&bFunctions[j], xHL, yHL, zHL); // integrate these across the sample and multiply by the density to get the kinteic energy
+					emat[R*i+j] =  kinteticE; // because this is a 1-D array, we have to be tricky in how we store it. i am storing both the upper and lower part
+					emat[R*j+i] =  kinteticE; // lower part
+				}
+				else{
+					emat[R*i+j] = 0; //should innitialize whole thing to zero and not deal with these cases explicitly. 
+					emat[R*j+i] = 0;
+				}
+			}
+		}
+		return emat;
+}
+
+
+Basis::basisFunction * createBasis(int order){
+	int R = 3 * (order+1) * (order+2) * (order+3) / 6;
+	Basis::basisFunction * bFunctions = (Basis::basisFunction *) malloc(R * sizeof(Basis::basisFunction)); // allocates memory for the basis functions, of which there are R
+		int basisPoint = 0; //basis functions, say p_i, are repeated for the x, y, and z coordinates. So we have p_i for x, for y, and for z. basisPoint is the "i" index in this notation.
+
+		for(int k = 0; k <= order ; k++){  // k, l, and m are the powers for x, y, and z. 
+			for(int l = 0; l <= order; l++){ // maximum size for any of k, l, and m is the order (x^4 is highest x power for 4th order, for example)
+				for(int m = 0; m <= order; m++){
+					if(k + l + m <= order){ // the sum of k, l, and m must be less than the order ( x*y*z^2 is 4th order)
+						for(int i = 0; i<3; i++){ // i is for each of the three coordinates that each basis function is repeated for. The function is the same for each.
+							bFunctions[basisPoint+i].xk = k;
+							bFunctions[basisPoint+i].yl = l;
+							bFunctions[basisPoint+i].zm = m;
+
+							bFunctions[basisPoint+i].coord = i; // whether this particular basis function belongs to x, y, or z.
+							bFunctions[basisPoint+i].pnumb = parity(k,l,m, i); //calls the partity function to determine the parity. see albert's paper.
+						}
+					basisPoint += 3; // skip ahead three in the array because basis functions come in triplets (one for each coordinate). 
+					}
+				}
+			}
+		}
+		qsort(bFunctions, R, sizeof(Basis::basisFunction), compPnumb);
+		return bFunctions;
+}
+
 
 int parity(int k, int l, int m, int i){ // calcualtes the parity of the function (functions of different parity integrate to zero, so this block-diagonalizes things). 
 	double pvec[3] = {0,0,0};
