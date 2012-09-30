@@ -27,8 +27,9 @@ double integrateBasis(Basis::basisFunction * b1, Basis::basisFunction * b2, doub
 double integrateGradBasis(Basis::basisFunction * b1, Basis::basisFunction * b2, int d1, int d2, double xmax, double ymax, double zmax); // integrates basis functions after differentiating with respect to one coordinate in each basis function of the pair. 
 double **** initElasticConstants(); //initialize the full tensor. 
 Basis::basisFunction * createBasis(int order);
-double * calcEmat(int order,Basis::basisFunction * bFunctions);
-double * calcGmat(int order, Basis::basisFunction * bFunctions, double **** ctens);
+double * calcEmat(int order,Basis::basisFunction * bFunctions);  // kinetic energy
+double * calcGmat(int order, Basis::basisFunction * bFunctions, double **** ctens); // elastic energy
+double * calcEigs(int order, double * emat, double * gmat);// eigenvalues (resonant frequencies squared, or maybe their inverse. anyway it's obvious)
 
 int _tmain(int argc, _TCHAR* argv[]) //main function
 {
@@ -59,46 +60,37 @@ int _tmain(int argc, _TCHAR* argv[]) //main function
 		int R = 3 * (order+1) * (order+2) * (order+3) / 6; // total dimension of the matrices 
 		cout << "R = " << R<<endl; // output that dimension to the user
 
-	QueryPerformanceCounter(&time1);
 		Basis::basisFunction * bFunctions = createBasis(order);
-	QueryPerformanceCounter(&time2);
-	cout<<"Time to create basis: "<<1000*(double)(time2.QuadPart-time1.QuadPart)/(freq.QuadPart)<<"ms"<<endl<<endl;
-
-		 // there are eight possible parities, and the basis functions are labled as such. This sorts them using the comparator compPnumb
-				
-	QueryPerformanceCounter(&time1);	
+			 // there are eight possible parities, and the basis functions are labled as such. This sorts them using the comparator compPnumb				
 		double * emat = calcEmat(order, bFunctions);
-	QueryPerformanceCounter(&time2);
-	cout<<"Time to create emat: "<<1000*(double)(time2.QuadPart-time1.QuadPart)/(freq.QuadPart)<<"ms"<<endl<<endl;
 	
-	QueryPerformanceCounter(&time1);
 		double * gmat =  calcGmat(order,  bFunctions,  ctens);
-	QueryPerformanceCounter(&time2);
-	cout<<"Time to create gmat: "<<1000*(double)(time2.QuadPart-time1.QuadPart)/(freq.QuadPart)<<"ms"<<endl<<endl;
 
-		QueryPerformanceCounter(&time1);
-		lapack_int ch0 = LAPACKE_dpotrf(LAPACK_ROW_MAJOR, 'U', R, emat, R); // this performs a cholesky decomposition on the kinetic matrix. result is stored in emat (cholesky decomposition on A gives A = L L*, where L is lower triangular. Only Hermitian matrices need apply)
-		QueryPerformanceCounter(&time2);
-		cout<<"Time to cholesky: "<<1000*(double)(time2.QuadPart-time1.QuadPart)/(freq.QuadPart)<<"ms"<<endl<<endl;
+		//QueryPerformanceCounter(&time1);
+		//lapack_int ch0 = LAPACKE_dpotrf(LAPACK_ROW_MAJOR, 'U', R, emat, R); // this performs a cholesky decomposition on the kinetic matrix. result is stored in emat (cholesky decomposition on A gives A = L L*, where L is lower triangular. Only Hermitian matrices need apply)
+		//QueryPerformanceCounter(&time2);
+		//cout<<"Time to cholesky: "<<1000*(double)(time2.QuadPart-time1.QuadPart)/(freq.QuadPart)<<"ms"<<endl<<endl;
 
-		QueryPerformanceCounter(&time1);
-		lapack_int ch = LAPACKE_dsygst(LAPACK_ROW_MAJOR, 1,'U', R, gmat, R, emat,R); // reduces a generalized symmetric-definite generalized eignevalue problem to a standard eigenvalue problem
-		// problem is currently of type A*z = λ*B*z, this changes it to type C*z = λ*z. Essentially gives Binv*A*z = λ*z, but more clever (or stable. see intel MKL library documentation). 
-		QueryPerformanceCounter(&time2);
-		cout<<"Time to invert and reduce: "<<1000*(double)(time2.QuadPart-time1.QuadPart)/(freq.QuadPart)<<"ms"<<endl<<endl;
+		//QueryPerformanceCounter(&time1);
+		//lapack_int ch = LAPACKE_dsygst(LAPACK_ROW_MAJOR, 1,'U', R, gmat, R, emat,R); // reduces a generalized symmetric-definite generalized eignevalue problem to a standard eigenvalue problem
+		//// problem is currently of type A*z = λ*B*z, this changes it to type C*z = λ*z. Essentially gives Binv*A*z = λ*z, but more clever (or stable. see intel MKL library documentation). 
+		//QueryPerformanceCounter(&time2);
+		//cout<<"Time to invert and reduce: "<<1000*(double)(time2.QuadPart-time1.QuadPart)/(freq.QuadPart)<<"ms"<<endl<<endl;
 
-		QueryPerformanceCounter(&time1);
-		double * w = (double*) malloc(sizeof(double)*R); // this will store eigenvalues
-		lapack_int ch2 = LAPACKE_dsyevd(LAPACK_ROW_MAJOR, 'N', 'U', R, gmat, R, w); //computes eigenvalues and stores in "w". Eigenvectors are optional, but not computed here (Need to take advantage of block-diagonalization)
-		QueryPerformanceCounter(&time2);
-		cout<<"Time to solve eigenproblem: "<<1000*(double)(time2.QuadPart-time1.QuadPart)/(freq.QuadPart)<<"ms"<<endl<<endl;
-	
+		//QueryPerformanceCounter(&time1);
+		//double * w = (double*) malloc(sizeof(double)*R); // this will store eigenvalues
+		//lapack_int ch2 = LAPACKE_dsyevd(LAPACK_ROW_MAJOR, 'N', 'U', R, gmat, R, w); //computes eigenvalues and stores in "w". Eigenvectors are optional, but not computed here (Need to take advantage of block-diagonalization)
+		//QueryPerformanceCounter(&time2);
+		//cout<<"Time to solve eigenproblem: "<<1000*(double)(time2.QuadPart-time1.QuadPart)/(freq.QuadPart)<<"ms"<<endl<<endl;	
+
+		double * eigs = calcEigs(order,  emat,  gmat);
+
 		std::ofstream out4;
 		out4.open("eigs.dat",std::ios_base::beg); //writes eigenvalues so that they can be opened in mathematica or something.
 		out4.precision(15);
 	
 		for(int i = 0; i < R; i++){
-		 out4<<w[i]<<"\t"; //outputs the eigenvalues to the file
+		 out4<<eigs[i]<<"\t"; //outputs the eigenvalues to the file
 		}
 		out4.close();
 
@@ -117,12 +109,25 @@ int _tmain(int argc, _TCHAR* argv[]) //main function
 
 		delete[] emat; //cleanup
 		delete[] gmat;
-		delete[] w;
+		delete[] eigs;
 		delete[] bFunctions;
 
 		}
 	return 0;
 }
+
+
+double * calcEigs(int order, double * emat, double * gmat){
+
+		int R = 3 * (order+1) * (order+2) * (order+3) / 6;
+		lapack_int ch0 = LAPACKE_dpotrf(LAPACK_ROW_MAJOR, 'U', R, emat, R);
+		lapack_int ch = LAPACKE_dsygst(LAPACK_ROW_MAJOR, 1,'U', R, gmat, R, emat,R);
+		double * w = (double*) malloc(sizeof(double)*R); // this will store eigenvalues
+		lapack_int ch2 = LAPACKE_dsyevd(LAPACK_ROW_MAJOR, 'N', 'U', R, gmat, R, w); //computes eigenvalues and stores in "w". Eigenvectors are optional, but not computed here (Need to take advantage of block-diagonalization)
+
+		return w;
+}
+
 
 double * calcGmat(int order, Basis::basisFunction * bFunctions, double **** ctens){
 		int R = 3 * (order+1) * (order+2) * (order+3) / 6;
