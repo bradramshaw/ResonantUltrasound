@@ -26,6 +26,7 @@
 #include <iostream>
 #include <algorithm>
 
-#include "basis.h"
+#include "Basis.h"
 #include "DataExtractor.h"
+#include "GeneticAlgorithm.h"
 
