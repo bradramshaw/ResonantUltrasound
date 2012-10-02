@@ -14,6 +14,8 @@ static const double c12 = 0.19721e+9;
 static const double c13 = 0.19721e+9;
 static const double c23 = 0.19721e+9;
 
+
+
 static const double density = 15467; // density of the material in grams/meter^3. All units are SI
 
 static const double xHL = 0.0023724; // HALF length in the x direction, in meters.

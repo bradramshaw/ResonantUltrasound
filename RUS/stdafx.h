@@ -13,7 +13,7 @@
 #include "mkl_lapacke.h"
 
 #include <afxwin.h>
-
+#include <unordered_map>
 #include <fstream>
 #include <stdio.h>
 #include <tchar.h>

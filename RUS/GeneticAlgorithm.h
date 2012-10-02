@@ -30,6 +30,9 @@ private:
 	int _nPopulation,_dataSetLength;
 	double _scaleFactor, _crossingProbability;
 	double * _dataSet;
+
+	double * _emat;
+	double * _pmat;
 	
 	double ** _residualArray;
 	double ** _paramArray;
@@ -39,7 +42,9 @@ private:
 	int parity(int k, int l, int m, int coord); // parity function looks at the symmetry of a basis function, ie x^2 * y * z^3. more below in the full function definition.	
 	double **** initElasticConstants(double* parameters); //initialize the full tensor. 
 
+	void initialiseMatrices();
 	double * calcEmat(int R,Basis::basisFunction * bFunctions);  // kinetic energy
+	double * calcPmat(int R, Basis::basisFunction * bFunctions); // elastic energy
 	double * calcGmat(int R, Basis::basisFunction * bFunctions, double **** ctens); // elastic energy
 	double * calcEigs(int R, double * emat, double * gmat);// eigenvalues (resonant frequencies squared, or maybe their inverse. anyway it's obvious)
 

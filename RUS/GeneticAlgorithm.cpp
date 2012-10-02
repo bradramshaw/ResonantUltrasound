@@ -26,7 +26,13 @@ GeneticAlgorithm::GeneticAlgorithm(double* dataSet, int dataSetLength,  int nPop
 
 	_basis = createBasis(order);
 
+	initialiseMatrices();
+
+	
+
 	initializeParameters(dataSet, dataSetLength, nPopulation, scaleFactor, crossingProbability);	
+
+	
 	
 }
 
@@ -47,6 +53,11 @@ void GeneticAlgorithm::initializeRandomNumberGenerators(){
     ints3 = new int[_nPopulation];
 }
 
+void GeneticAlgorithm::initialiseMatrices(){
+	_emat = calcEmat(_R, _basis);
+	return;
+}
+
 void GeneticAlgorithm::initializeParameters(double* dataSet, int dataSetLength, int nPopulation, double scaleFactor, double crossingProbability){
 
 	_scaleFactor = scaleFactor;
@@ -64,6 +75,10 @@ void GeneticAlgorithm::initializeParameters(double* dataSet, int dataSetLength, 
 	_populationParametersOld = (Parameters::fitParameters *) mkl_malloc(sizeof(Parameters::fitParameters)*nPopulation,16);
 	_populationParametersNew = (Parameters::fitParameters *) mkl_malloc(sizeof(Parameters::fitParameters)*nPopulation,16);
 	for(int i  = 0; i < _nPopulation; i++){
+
+		/*_populationParametersOld[i].c11 = (randomDouble(0,1))*pow(10,9);
+		_populationParametersOld[i].c44 =  (randomDouble(0,1))*pow(10,9);*/
+
 		_populationParametersOld[i].c11 = (randomDouble(0.5,0.54))*pow(10,9);
 		_populationParametersOld[i].c22 = _populationParametersOld[i].c11;
 		_populationParametersOld[i].c33 = _populationParametersOld[i].c11;
@@ -73,8 +88,8 @@ void GeneticAlgorithm::initializeParameters(double* dataSet, int dataSetLength, 
 		_populationParametersOld[i].c12 = (randomDouble(0.18,0.22))*pow(10,9);
 		_populationParametersOld[i].c13 = _populationParametersOld[i].c12;
 		_populationParametersOld[i].c23 = _populationParametersOld[i].c12;
-	/*	
-		_populationParametersOld[i].c11 = 0.52296e+9;
+		
+		/*_populationParametersOld[i].c11 = 0.52296e+9;
 		_populationParametersOld[i].c22 = _populationParametersOld[i].c11;
 		_populationParametersOld[i].c33 = _populationParametersOld[i].c11;
 		_populationParametersOld[i].c44 = 0.16288e+9;
@@ -203,15 +218,44 @@ double * GeneticAlgorithm::calculateFrequencies(double * parameters){
 	double * frequencies = (double*) malloc(sizeof(double)*( _R - 6)) ;
 	
 	double **** ctens = initElasticConstants(parameters);
-	
-	double * emat = calcEmat(_R, _basis);			
-	double * gmat = calcGmat(_R, _basis, ctens);
+
+
+	//LARGE_INTEGER time1,time2,freq;  // stores times and CPU frequency for profiling
+	//QueryPerformanceFrequency(&freq);
+	//QueryPerformanceCounter(&time1);
+
+	/*double * emat = new double[_R*_R];
+	memcpy(emat, _emat, sizeof(double)*_R*_R);*/
+	double * emat = calcEmat(_R, _basis);
+
+	//QueryPerformanceCounter(&time2);
+	//std::cout<<"Time to memcpy: "<<1000*(double)(time2.QuadPart-time1.QuadPart)/(freq.QuadPart)<<"ms"<<std::endl<<std::endl;
+
+	////	for(int i = 0; i < _R; i++){
+	////	for(int j = 0; j < _R; j++){
+	////		std::cout<<emat[i+_R*j]<<" ";
+	////	}
+	////	std::cout<<std::endl;
+	////}
+	////std::cout<<std::endl;
+	//
+	///*double * emat = calcEmat(_R, _basis);*/
+
+	double * gmat = calcGmat(_R, _basis, ctens);	
+	//for(int i = 0; i < _R; i++){
+	//	for(int j = 0; j < _R; j++){
+	//		std::cout<<gmat[i+_R*j]<<" ";
+	//	}
+	//	std::cout<<std::endl;
+	//}
+	//std::cout<<std::endl;
+
 	double * temp = calcEigs(_R, emat, gmat);
-	
+
 	for(int i  = 6; i < _R; i++){
 		frequencies[i-6] = (sqrt(temp[i]))/(2*3.1415926535897*pow(10,5));
 	}
-	
+	//
 	delete [] emat;
 	delete [] gmat;
 	delete [] temp;
@@ -324,8 +368,8 @@ double GeneticAlgorithm::integrateGradBasis(Basis::basisFunction * b1, Basis::ba
 
 double * GeneticAlgorithm::calcGmat(int R, Basis::basisFunction * bFunctions, double **** ctens){
 		
-		double * gmat; // potential energy matrix. This is more complicated beacuse it depends on gradients 
-		gmat = new double[R*R]; // same size of course. 
+		/*double * gmat;*/ // potential energy matrix. This is more complicated beacuse it depends on gradients 
+		double * gmat = new double[R*R]; // same size of course. 
 	
 		//again, this is symmetric, so only calculate the upper half part and just duplicate
 		for(int i = 0; i < R; i++){
@@ -366,6 +410,7 @@ double * GeneticAlgorithm::calcEmat(int R, Basis::basisFunction * bFunctions){
 			}
 		}
 			
+	
 		return emat;
 }
 
