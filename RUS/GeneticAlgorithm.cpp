@@ -23,12 +23,15 @@ GeneticAlgorithm::GeneticAlgorithm(double* dataSet, int dataSetLength,  int nPop
 	_zHL = zHL;
 
 	_density = density;
-
-	_basis = createBasis(order);
+	_basisPop = new int[8];
+	for(int i = 0; i < 8; i++){
+		_basisPop[i] = 0;
+	}
+	
+	_basis = createBasis(order, _basisPop);
 
 	initialiseMatrices();
 
-	
 
 	initializeParameters(dataSet, dataSetLength, nPopulation, scaleFactor, crossingProbability);	
 
@@ -55,6 +58,7 @@ void GeneticAlgorithm::initializeRandomNumberGenerators(){
 
 void GeneticAlgorithm::initialiseMatrices(){
 	_emat = calcEmat(_R, _basis);
+	
 	return;
 }
 
@@ -79,17 +83,17 @@ void GeneticAlgorithm::initializeParameters(double* dataSet, int dataSetLength, 
 		/*_populationParametersOld[i].c11 = (randomDouble(0,1))*pow(10,9);
 		_populationParametersOld[i].c44 =  (randomDouble(0,1))*pow(10,9);*/
 
-		_populationParametersOld[i].c11 = (randomDouble(0.5,0.54))*pow(10,9);
+		_populationParametersOld[i].c11 = (randomDouble(0,1))*pow(10,9);
 		_populationParametersOld[i].c22 = _populationParametersOld[i].c11;
 		_populationParametersOld[i].c33 = _populationParametersOld[i].c11;
-		_populationParametersOld[i].c44 = (randomDouble(0.14,0.18))*pow(10,9);
+		_populationParametersOld[i].c44 = (randomDouble(0,1))*pow(10,9);
 		_populationParametersOld[i].c55 = _populationParametersOld[i].c44;
 		_populationParametersOld[i].c66 = _populationParametersOld[i].c44;
-		_populationParametersOld[i].c12 = (randomDouble(0.18,0.22))*pow(10,9);
+		_populationParametersOld[i].c12 = (randomDouble(0,1))*pow(10,9);
 		_populationParametersOld[i].c13 = _populationParametersOld[i].c12;
 		_populationParametersOld[i].c23 = _populationParametersOld[i].c12;
 		
-		/*_populationParametersOld[i].c11 = 0.52296e+9;
+	/*	_populationParametersOld[i].c11 = 0.52296e+9;
 		_populationParametersOld[i].c22 = _populationParametersOld[i].c11;
 		_populationParametersOld[i].c33 = _populationParametersOld[i].c11;
 		_populationParametersOld[i].c44 = 0.16288e+9;
@@ -220,14 +224,14 @@ double * GeneticAlgorithm::calculateFrequencies(double * parameters){
 	double **** ctens = initElasticConstants(parameters);
 
 
-	//LARGE_INTEGER time1,time2,freq;  // stores times and CPU frequency for profiling
-	//QueryPerformanceFrequency(&freq);
-	//QueryPerformanceCounter(&time1);
+	LARGE_INTEGER time1,time2,freq;  // stores times and CPU frequency for profiling
+	QueryPerformanceFrequency(&freq);
+	QueryPerformanceCounter(&time1);
 
-	/*double * emat = new double[_R*_R];
-	memcpy(emat, _emat, sizeof(double)*_R*_R);*/
-	double * emat = calcEmat(_R, _basis);
+	double * emat = new double[_R*_R];
+	memcpy(emat, _emat, sizeof(double)*_R*_R);
 
+	
 	//QueryPerformanceCounter(&time2);
 	//std::cout<<"Time to memcpy: "<<1000*(double)(time2.QuadPart-time1.QuadPart)/(freq.QuadPart)<<"ms"<<std::endl<<std::endl;
 
@@ -241,7 +245,10 @@ double * GeneticAlgorithm::calculateFrequencies(double * parameters){
 	//
 	///*double * emat = calcEmat(_R, _basis);*/
 
-	double * gmat = calcGmat(_R, _basis, ctens);	
+	/*
+	double * gmat = calcGmat(_R, _basis, ctens);*/
+	
+
 	//for(int i = 0; i < _R; i++){
 	//	for(int j = 0; j < _R; j++){
 	//		std::cout<<gmat[i+_R*j]<<" ";
@@ -250,12 +257,18 @@ double * GeneticAlgorithm::calculateFrequencies(double * parameters){
 	//}
 	//std::cout<<std::endl;
 
+	double * gmat = calcGmat(_R, _basis, ctens);
+	/*		QueryPerformanceCounter(&time1);*/
 	double * temp = calcEigs(_R, emat, gmat);
+	//	QueryPerformanceCounter(&time2);
+	//std::cout<<"Time to memcpy: "<<1000*(double)(time2.QuadPart-time1.QuadPart)/(freq.QuadPart)<<"ms"<<std::endl<<std::endl;
 
 	for(int i  = 6; i < _R; i++){
 		frequencies[i-6] = (sqrt(temp[i]))/(2*3.1415926535897*pow(10,5));
+	
 	}
-	//
+	
+
 	delete [] emat;
 	delete [] gmat;
 	delete [] temp;
@@ -316,13 +329,50 @@ double **** GeneticAlgorithm::initElasticConstants(double * parameters){  // I s
 }
 
 double * GeneticAlgorithm::calcEigs(int R, double * emat, double * gmat){
+		
+		lapack_int ch0, ch, ch2;
+		
+	/*
+		ch0 = LAPACKE_dpotrf(LAPACK_ROW_MAJOR, 'U',R, emat, R);*/
+		int address = 0;
+		for(int i = 0; i < 8; i++){
+		
+			ch0 = LAPACKE_dpotrf(LAPACK_ROW_MAJOR, 'U', _basisPop[i], &emat[address], R);
+			address += (_basisPop[i])*(R+1);
+			
+		}
 
-		lapack_int ch0 = LAPACKE_dpotrf(LAPACK_ROW_MAJOR, 'U', R, emat, R);
-		lapack_int ch = LAPACKE_dsygst(LAPACK_ROW_MAJOR, 1,'U', R, gmat, R, emat,R);
+		address = 0;
+		for(int i = 0; i < 8; i++){
+			ch = LAPACKE_dsygst(LAPACK_ROW_MAJOR, 1,'U',  _basisPop[i], &gmat[address], R, &emat[address],R);
+			address += (_basisPop[i])*(R+1);
+		}
+	/*	ch = LAPACKE_dsygst(LAPACK_ROW_MAJOR, 1,'U', R, gmat, R, emat,R);*/
+
 		double * w = (double*) malloc(sizeof(double)*R); // this will store eigenvalues
-		lapack_int ch2 = LAPACKE_dsyevd(LAPACK_ROW_MAJOR, 'N', 'U', R, gmat, R, w); //computes eigenvalues and stores in "w". Eigenvectors are optional, but not computed here (Need to take advantage of block-diagonalization)
+
+		address = 0;
+		int position = 0;
+		for(int i = 0; i < 8; i++){
+			ch2 = LAPACKE_dsyevd(LAPACK_ROW_MAJOR, 'N', 'U', _basisPop[i], &gmat[address], R, &w[position]);
+			address += (_basisPop[i])*(R+1);
+			position += _basisPop[i];
+		}
+
+		qsort(w,R,sizeof(double), dComp);
+				
+		//double * w = (double*) malloc(sizeof(double)*R); // this will store eigenvalues
+		//ch2 = LAPACKE_dsyevd(LAPACK_ROW_MAJOR, 'N', 'U', R, gmat, R, w); //computes eigenvalues and stores in "w". Eigenvectors are optional, but not computed here (Need to take advantage of block-diagonalization)
 	
 		return w;
+}
+
+int GeneticAlgorithm::dComp(const void *a, const void *b){
+	double diff = ( *(double*)a - *(double*)b );
+	if(diff < 0)
+		return -1;
+	else return 1;
+	
 }
 
 double GeneticAlgorithm::integrateBasis(Basis::basisFunction * b1, Basis::basisFunction * b2, double xmax, double ymax, double zmax){ // integrates two basis functions together. 
@@ -367,27 +417,57 @@ double GeneticAlgorithm::integrateGradBasis(Basis::basisFunction * b1, Basis::ba
 }
 
 double * GeneticAlgorithm::calcGmat(int R, Basis::basisFunction * bFunctions, double **** ctens){
-		
+	
 		/*double * gmat;*/ // potential energy matrix. This is more complicated beacuse it depends on gradients 
 		double * gmat = new double[R*R]; // same size of course. 
+		int address = 0;
+		int basisTotal = 0;
 	
 		//again, this is symmetric, so only calculate the upper half part and just duplicate
-		for(int i = 0; i < R; i++){
-			for(int j = i; j < R; j++){ 
+	for (int bN = 0; bN < 8; bN++){
+		for(int i = 0; i < _basisPop[bN]; i++){
+			for(int j = i; j < _basisPop[bN]; j++){ 
 				
 				double tempSum = 0; // this is a sum of many terms; this is the storage variable
 				for(int k = 0; k<3; k++){
 					for(int l = 0; l < 3; l++){ // the elastic tensor is 4 dimensional. two coordinates come from the displacement directions the basis functions belong to, and the other two are the directions the derivatives are beign taken in. 
-						tempSum += ctens[bFunctions[i].coord][k][bFunctions[j].coord][l]*integrateGradBasis(&bFunctions[i],&bFunctions[j],k,l, _xHL, _yHL, _zHL); //this just stupidly tries all of them, even though many are zero.
+						tempSum += ctens[bFunctions[basisTotal + i].coord][k][bFunctions[basisTotal + j].coord][l]*integrateGradBasis(&bFunctions[basisTotal + i],&bFunctions[basisTotal + j],k,l, _xHL, _yHL, _zHL); //this just stupidly tries all of them, even though many are zero.
 					}
+						
 				}
-				gmat[i*R+j] = tempSum; // set upper and lower part of the matrix to the sum of the components. 
-				gmat[j*R+i] = tempSum;
+				gmat[address + i*R + j] = tempSum; // set upper and lower part of the matrix to the sum of the components. 
+
+		//		gmat[j*R+i] = tempSum;
 			}
 		}
-		return gmat;
+		address += (_basisPop[bN])*(R+1);
+		basisTotal += _basisPop[bN];
+	}
+	
+		return gmat;		
+	
+	
+	///*double * gmat;*/ // potential energy matrix. This is more complicated beacuse it depends on gradients 
+		//double * gmat = new double[R*R]; // same size of course. 
+	
+		////again, this is symmetric, so only calculate the upper half part and just duplicate
+		//for(int i = 0; i < R; i++){
+		//	for(int j = i; j < R; j++){ 
+		//		
+		//		double tempSum = 0; // this is a sum of many terms; this is the storage variable
+		//		for(int k = 0; k<3; k++){
+		//			for(int l = 0; l < 3; l++){ // the elastic tensor is 4 dimensional. two coordinates come from the displacement directions the basis functions belong to, and the other two are the directions the derivatives are beign taken in. 
+		//				tempSum += ctens[bFunctions[i].coord][k][bFunctions[j].coord][l]*integrateGradBasis(&bFunctions[i],&bFunctions[j],k,l, _xHL, _yHL, _zHL); //this just stupidly tries all of them, even though many are zero.
+		//			}
+		//				
+		//		}
+		//		gmat[i*R+j] = tempSum; // set upper and lower part of the matrix to the sum of the components. 
+		//		gmat[j*R+i] = tempSum;
+		//	}
+		//}
+	
+		//return gmat;
 }
-
 
 
 double * GeneticAlgorithm::calcEmat(int R, Basis::basisFunction * bFunctions){
@@ -401,11 +481,11 @@ double * GeneticAlgorithm::calcEmat(int R, Basis::basisFunction * bFunctions){
 					
 					double kinteticE = _density*integrateBasis(&bFunctions[i],&bFunctions[j], _xHL, _yHL, _zHL); // integrate these across the sample and multiply by the density to get the kinteic energy
 					emat[R*i+j] =  kinteticE; // because this is a 1-D array, we have to be tricky in how we store it. i am storing both the upper and lower part
-					emat[R*j+i] =  kinteticE; // lower part
+				//	emat[R*j+i] =  kinteticE; // lower part
 				}
 				else{
 					emat[R*i+j] = 0; //should innitialize whole thing to zero and not deal with these cases explicitly. 
-					emat[R*j+i] = 0;
+				//	emat[R*j+i] = 0;
 				}
 			}
 		}
@@ -416,7 +496,7 @@ double * GeneticAlgorithm::calcEmat(int R, Basis::basisFunction * bFunctions){
 
 
 
-Basis::basisFunction * GeneticAlgorithm::createBasis(int order){
+Basis::basisFunction * GeneticAlgorithm::createBasis(int order, int* basisPop){
 	int R = 3 * (order+1) * (order+2) * (order+3) / 6;
 	Basis::basisFunction * bFunctions = (Basis::basisFunction *) malloc(R * sizeof(Basis::basisFunction)); // allocates memory for the basis functions, of which there are R
 		int basisPoint = 0; //basis functions, say p_i, are repeated for the x, y, and z coordinates. So we have p_i for x, for y, and for z. basisPoint is the "i" index in this notation.
@@ -431,7 +511,7 @@ Basis::basisFunction * GeneticAlgorithm::createBasis(int order){
 							bFunctions[basisPoint+i].zm = m;
 
 							bFunctions[basisPoint+i].coord = i; // whether this particular basis function belongs to x, y, or z.
-							bFunctions[basisPoint+i].pnumb = parity(k,l,m, i); //calls the partity function to determine the parity. see albert's paper.
+							bFunctions[basisPoint+i].pnumb = parity(k,l,m, i, basisPop); //calls the partity function to determine the parity. see albert's paper.
 						}
 					basisPoint += 3; // skip ahead three in the array because basis functions come in triplets (one for each coordinate). 
 					}
@@ -442,7 +522,7 @@ Basis::basisFunction * GeneticAlgorithm::createBasis(int order){
 		return bFunctions;
 }
 
-int GeneticAlgorithm::parity(int k, int l, int m, int i){ // calcualtes the parity of the function (functions of different parity integrate to zero, so this block-diagonalizes things). 
+int GeneticAlgorithm::parity(int k, int l, int m, int i, int * basisPop){ // calcualtes the parity of the function (functions of different parity integrate to zero, so this block-diagonalizes things). 
 	double pvec[3] = {0,0,0};
 
 	if(i == 0){ // i is the displacement coordinate of the function, x y or z
@@ -463,27 +543,35 @@ int GeneticAlgorithm::parity(int k, int l, int m, int i){ // calcualtes the pari
 
 
 	if( (pvec[0] == 1)&&(pvec[1] == 1)&&(pvec[2] == 1)){ //this categorizes the parities in x,y and z into eight groups. 
+		basisPop[0]++;
 	return 1;
 	}
 	else if( (pvec[0] == 1)&&(pvec[1] == 1)&&(pvec[2] == -1)){
+		basisPop[1]++;
 	return 2;
 	}
 	else if( (pvec[0] == 1)&&(pvec[1] == -1)&&(pvec[2] == 1)){
+		basisPop[2]++;
 	return 3;
 	}
 	else if( (pvec[0] == 1)&&(pvec[1] == -1)&&(pvec[2] == -1)){
+		basisPop[3]++;
 	return 4;
 	}
 	else if( (pvec[0] == -1)&&(pvec[1] == 1)&&(pvec[2] == 1)){
+		basisPop[4]++;
 	return 5;
 	}
 	else if( (pvec[0] == -1)&&(pvec[1] == 1)&&(pvec[2] == -1)){
+		basisPop[5]++;
 	return 6;
 	}
 	else if( (pvec[0] == -1)&&(pvec[1] == -1)&&(pvec[2] == 1)){
+		basisPop[6]++;
 	return 7;
 	}
 	else if( (pvec[0] == -1)&&(pvec[1] == -1)&&(pvec[2] == -1)){
+		basisPop[7]++;
 	return 8;
 	}
 	else return -1;

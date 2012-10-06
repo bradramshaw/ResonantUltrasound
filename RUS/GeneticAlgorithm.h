@@ -32,25 +32,29 @@ private:
 	double * _dataSet;
 
 	double * _emat;
-	double * _pmat;
+
+	int * _basisPop;
 	
+
 	double ** _residualArray;
 	double ** _paramArray;
 
 	static int compPnumb(const void * b1, const void * b2); //comparitor for parity numbers. 
-	Basis::basisFunction * createBasis(int order);
-	int parity(int k, int l, int m, int coord); // parity function looks at the symmetry of a basis function, ie x^2 * y * z^3. more below in the full function definition.	
+	Basis::basisFunction * createBasis(int order, int* basisPop);
+	int parity(int k, int l, int m, int coord, int * basisPop); // parity function looks at the symmetry of a basis function, ie x^2 * y * z^3. more below in the full function definition.	
 	double **** initElasticConstants(double* parameters); //initialize the full tensor. 
 
 	void initialiseMatrices();
 	double * calcEmat(int R,Basis::basisFunction * bFunctions);  // kinetic energy
-	double * calcPmat(int R, Basis::basisFunction * bFunctions); // elastic energy
+	
 	double * calcGmat(int R, Basis::basisFunction * bFunctions, double **** ctens); // elastic energy
+
 	double * calcEigs(int R, double * emat, double * gmat);// eigenvalues (resonant frequencies squared, or maybe their inverse. anyway it's obvious)
 
 	double integrateBasis(Basis::basisFunction * b1, Basis::basisFunction * b2, double xmax, double ymax, double zmax); // This integrates  a pair of basis functions within the limits specified. Note that this assumes a parallelapiped, and takes "half" dimensions as inputs
 	double integrateGradBasis(Basis::basisFunction * b1, Basis::basisFunction * b2, int d1, int d2, double xmax, double ymax, double zmax); // integrates basis functions after differentiating with respect to one coordinate in each basis function of the pair. 
 
+	static int dComp(const void *a, const void *b);
 
 
 	Parameters::fitParameters * _populationParametersOld, *_populationParametersNew;

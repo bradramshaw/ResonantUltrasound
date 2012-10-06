@@ -50,13 +50,21 @@ int _tmain(int argc, _TCHAR* argv[]) //main function
 		int nPoints = extractor.getNumberOfLines();
 	
 		int order; // will store the max order of the polynomials to use
+		double scale, cross;
 		cout << "Highest polynomial order? ";
 		cin >> order;
 		cout  << endl;
 		int R = 3 * (order+1) * (order+2) * (order+3) / 6; // total dimension of the matrices 
 		cout << "R = " << R<<endl; // output that dimension to the user
+		cout << "Scale factor? ";
+		cin >> scale;
+		cout  << endl;
 
-		GeneticAlgorithm geneticAlgorithm(data, nPoints,  40, .3, .9, order, xHL, yHL, zHL, density);
+		cout << "Crossing Probability? ";
+		cin >> cross;
+		cout << endl;
+
+		GeneticAlgorithm geneticAlgorithm(data, nPoints,  40, scale, cross, order, xHL, yHL, zHL, density);
 	
 		geneticAlgorithm.calculateMinimum();
 		geneticAlgorithm.printMinimumParameters();	

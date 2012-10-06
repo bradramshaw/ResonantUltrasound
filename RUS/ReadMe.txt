@@ -40,3 +40,10 @@ should add to or customize.
 /////////////////////////////////////////////////////////////////////////////
 
 Resonant ultrasound calculations. 
+
+Timing: 
+with a population of 40, and taking advantage of the blocks (and with chrome and foobar open...), basis size of 10 takes 35ms per eigenvalue-sovling step, and 3472ms per generation per thread.
+
+Old way, same parameters, but calculating without the block-advantage, takes 13440ms per generation per thread. 
+
+Same as first (40, blocks, basis 10, etc..) but NOW i calculate potential energy only within the blocks. BAM. 1443ms per gen per thread.
