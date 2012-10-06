@@ -1,0 +1,5 @@
+Calculate the potential energy "gmat" integrals only once and store (hash too slow... but access in same order anyway so don't need).
+
+Fits 9 indep elastic constants only ATM... this is silly. 
+
+kinetic matrix "emat" could take advantage of blocks... but no point really
