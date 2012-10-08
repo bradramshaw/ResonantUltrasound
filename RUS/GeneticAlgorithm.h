@@ -35,6 +35,7 @@ private:
 
 	int * _basisPop;
 	
+	double * _gradientCalcs;
 
 	double ** _residualArray;
 	double ** _paramArray;
@@ -47,9 +48,11 @@ private:
 	void initialiseMatrices();
 	double * calcEmat(int R,Basis::basisFunction * bFunctions);  // kinetic energy
 	
-	double * calcGmat(int R, Basis::basisFunction * bFunctions, double **** ctens); // elastic energy
+	double * calcGmat(int R, Basis::basisFunction * bFunctions, double **** ctens, double * gradientCalcs); // elastic energy
 
 	double * calcEigs(int R, double * emat, double * gmat);// eigenvalues (resonant frequencies squared, or maybe their inverse. anyway it's obvious)
+
+	double * calcGradient(int R, Basis::basisFunction * bFunctions);
 
 	double integrateBasis(Basis::basisFunction * b1, Basis::basisFunction * b2, double xmax, double ymax, double zmax); // This integrates  a pair of basis functions within the limits specified. Note that this assumes a parallelapiped, and takes "half" dimensions as inputs
 	double integrateGradBasis(Basis::basisFunction * b1, Basis::basisFunction * b2, int d1, int d2, double xmax, double ymax, double zmax); // integrates basis functions after differentiating with respect to one coordinate in each basis function of the pair. 

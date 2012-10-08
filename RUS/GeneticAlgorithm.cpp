@@ -58,7 +58,7 @@ void GeneticAlgorithm::initializeRandomNumberGenerators(){
 
 void GeneticAlgorithm::initialiseMatrices(){
 	_emat = calcEmat(_R, _basis);
-	
+	_gradientCalcs = calcGradient(_R,_basis);
 	return;
 }
 
@@ -83,7 +83,7 @@ void GeneticAlgorithm::initializeParameters(double* dataSet, int dataSetLength, 
 		/*_populationParametersOld[i].c11 = (randomDouble(0,1))*pow(10,9);
 		_populationParametersOld[i].c44 =  (randomDouble(0,1))*pow(10,9);*/
 
-		_populationParametersOld[i].c11 = (randomDouble(0,1))*pow(10,9);
+	/*	_populationParametersOld[i].c11 = (randomDouble(0,1))*pow(10,9);
 		_populationParametersOld[i].c22 = _populationParametersOld[i].c11;
 		_populationParametersOld[i].c33 = _populationParametersOld[i].c11;
 		_populationParametersOld[i].c44 = (randomDouble(0,1))*pow(10,9);
@@ -91,9 +91,9 @@ void GeneticAlgorithm::initializeParameters(double* dataSet, int dataSetLength, 
 		_populationParametersOld[i].c66 = _populationParametersOld[i].c44;
 		_populationParametersOld[i].c12 = (randomDouble(0,1))*pow(10,9);
 		_populationParametersOld[i].c13 = _populationParametersOld[i].c12;
-		_populationParametersOld[i].c23 = _populationParametersOld[i].c12;
+		_populationParametersOld[i].c23 = _populationParametersOld[i].c12;*/
 		
-	/*	_populationParametersOld[i].c11 = 0.52296e+9;
+		_populationParametersOld[i].c11 = 0.52296e+9;
 		_populationParametersOld[i].c22 = _populationParametersOld[i].c11;
 		_populationParametersOld[i].c33 = _populationParametersOld[i].c11;
 		_populationParametersOld[i].c44 = 0.16288e+9;
@@ -101,7 +101,7 @@ void GeneticAlgorithm::initializeParameters(double* dataSet, int dataSetLength, 
 		_populationParametersOld[i].c66 = _populationParametersOld[i].c44;
 		_populationParametersOld[i].c12 = 0.19721e+9;
 		_populationParametersOld[i].c13 = _populationParametersOld[i].c12;
-		_populationParametersOld[i].c23 = _populationParametersOld[i].c12;*/
+		_populationParametersOld[i].c23 = _populationParametersOld[i].c12;
 	
 		_populationParametersOld[i].chiSq = calculateResidual(&_populationParametersOld[i],0);
 	
@@ -257,7 +257,7 @@ double * GeneticAlgorithm::calculateFrequencies(double * parameters){
 	//}
 	//std::cout<<std::endl;
 
-	double * gmat = calcGmat(_R, _basis, ctens);
+	double * gmat = calcGmat(_R, _basis, ctens, _gradientCalcs);
 	/*		QueryPerformanceCounter(&time1);*/
 	double * temp = calcEigs(_R, emat, gmat);
 	//	QueryPerformanceCounter(&time2);
@@ -416,13 +416,13 @@ double GeneticAlgorithm::integrateGradBasis(Basis::basisFunction * b1, Basis::ba
 	return intVal;
 }
 
-double * GeneticAlgorithm::calcGmat(int R, Basis::basisFunction * bFunctions, double **** ctens){
+double * GeneticAlgorithm::calcGmat(int R, Basis::basisFunction * bFunctions, double **** ctens, double * gradientCalcs){
 	
 		/*double * gmat;*/ // potential energy matrix. This is more complicated beacuse it depends on gradients 
 		double * gmat = new double[R*R]; // same size of course. 
 		int address = 0;
 		int basisTotal = 0;
-	
+		int gradIndex = 0;
 		//again, this is symmetric, so only calculate the upper half part and just duplicate
 	for (int bN = 0; bN < 8; bN++){
 		for(int i = 0; i < _basisPop[bN]; i++){
@@ -431,7 +431,10 @@ double * GeneticAlgorithm::calcGmat(int R, Basis::basisFunction * bFunctions, do
 				double tempSum = 0; // this is a sum of many terms; this is the storage variable
 				for(int k = 0; k<3; k++){
 					for(int l = 0; l < 3; l++){ // the elastic tensor is 4 dimensional. two coordinates come from the displacement directions the basis functions belong to, and the other two are the directions the derivatives are beign taken in. 
-						tempSum += ctens[bFunctions[basisTotal + i].coord][k][bFunctions[basisTotal + j].coord][l]*integrateGradBasis(&bFunctions[basisTotal + i],&bFunctions[basisTotal + j],k,l, _xHL, _yHL, _zHL); //this just stupidly tries all of them, even though many are zero.
+						//tempSum += ctens[bFunctions[basisTotal + i].coord][k][bFunctions[basisTotal + j].coord][l]*integrateGradBasis(&bFunctions[basisTotal + i],&bFunctions[basisTotal + j],k,l, _xHL, _yHL, _zHL); //this just stupidly tries all of them, even though many are zero.
+						tempSum += ctens[bFunctions[basisTotal + i].coord][k][bFunctions[basisTotal + j].coord][l]*gradientCalcs[gradIndex]; //this just stupidly tries all of them, even though many are zero.
+
+						gradIndex++;
 					}
 						
 				}
@@ -467,6 +470,42 @@ double * GeneticAlgorithm::calcGmat(int R, Basis::basisFunction * bFunctions, do
 		//}
 	
 		//return gmat;
+}
+
+double * GeneticAlgorithm::calcGradient(int R, Basis::basisFunction * bFunctions){
+	int elements = 0;
+	for(int i = 0; i < 8; i++){
+		elements += (_basisPop[i])*(_basisPop[i]);
+	}
+
+	double * gradientCalcs = new double[elements*9];
+
+		int address = 0;
+		int basisTotal = 0;
+		int gradIndex = 0;
+	
+		//again, this is symmetric, so only calculate the upper half part and just duplicate
+	for (int bN = 0; bN < 8; bN++){
+		for(int i = 0; i < _basisPop[bN]; i++){
+			for(int j = i; j < _basisPop[bN]; j++){ 
+				
+				 // this is a sum of many terms; this is the storage variable
+				for(int k = 0; k<3; k++){
+					for(int l = 0; l < 3; l++){ // the elastic tensor is 4 dimensional. two coordinates come from the displacement directions the basis functions belong to, and the other two are the directions the derivatives are beign taken in. 
+						gradientCalcs[gradIndex]= integrateGradBasis(&bFunctions[basisTotal + i],&bFunctions[basisTotal + j],k,l, _xHL, _yHL, _zHL); //this just stupidly tries all of them, even though many are zero.
+						gradIndex++;
+					}
+						
+				}
+			
+
+			}
+		}
+		address += (_basisPop[bN])*(R+1);
+		basisTotal += _basisPop[bN];
+	}
+
+	return gradientCalcs;
 }
 
 
