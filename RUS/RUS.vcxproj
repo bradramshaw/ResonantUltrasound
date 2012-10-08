@@ -92,6 +92,7 @@
   <ItemGroup>
     <None Include="IsotropicCuboid.dat" />
     <None Include="ReadMe.txt" />
+    <None Include="TODO.txt" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ArrayAllocator.h" />
