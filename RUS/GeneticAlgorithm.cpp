@@ -264,8 +264,7 @@ double * GeneticAlgorithm::calculateFrequencies(double * parameters){
 	//std::cout<<"Time to memcpy: "<<1000*(double)(time2.QuadPart-time1.QuadPart)/(freq.QuadPart)<<"ms"<<std::endl<<std::endl;
 
 	for(int i  = 6; i < _R; i++){
-		frequencies[i-6] = (sqrt(temp[i]))/(2*3.1415926535897*pow(10,5));
-	
+		frequencies[i-6] = (sqrt(temp[i]))/(2*3.1415926535897*pow(10,5));	
 	}
 	
 

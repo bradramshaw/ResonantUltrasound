@@ -1,4 +1,4 @@
-Calculate the potential energy "gmat" integrals only once and store (hash too slow... but access in same order anyway so don't need).
+DONE Calculate the potential energy "gmat" integrals only once and store (hash too slow... but access in same order anyway so don't need).
 
 Fits 9 indep elastic constants only ATM... this is silly. 
 
