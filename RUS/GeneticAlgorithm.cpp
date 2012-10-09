@@ -9,12 +9,12 @@ double totalTime = 0;  // for timing things
 LARGE_INTEGER freq;
 _CrtMemState s1,s2,s3;
 
-GeneticAlgorithm::GeneticAlgorithm(double* dataSet, int dataSetLength,  int nPopulation, double scaleFactor, double crossingProbability, int order, double xHL, double yHL, double zHL, double density){	
+GeneticAlgorithm::GeneticAlgorithm(double* dataSet, int dataSetLength,  int nPopulation, double scaleFactor, double crossingProbability, int order, double xHL, double yHL, double zHL, double density, int nMissing){	
 	QueryPerformanceFrequency(&freq);
 	_nPopulation = nPopulation;
 	initializeRandomNumberGenerators();
 	
-
+	_nMissing = nMissing;
 	_order = order;
 	_R = 3 * (order+1) * (order+2) * (order+3) / 6;
 
@@ -80,19 +80,21 @@ void GeneticAlgorithm::initializeParameters(double* dataSet, int dataSetLength, 
 	_populationParametersNew = (Parameters::fitParameters *) mkl_malloc(sizeof(Parameters::fitParameters)*nPopulation,16);
 	for(int i  = 0; i < _nPopulation; i++){
 
-		/*_populationParametersOld[i].c11 = (randomDouble(0,1))*pow(10,9);
-		_populationParametersOld[i].c44 =  (randomDouble(0,1))*pow(10,9);*/
-
 	/*	_populationParametersOld[i].c11 = (randomDouble(0,1))*pow(10,9);
+		_populationParametersOld[i].c44 = (randomDouble(0,1))*pow(10,9);*/
+
+		_populationParametersOld[i].c11 = randomDouble(1*pow(10,7),1*pow(10,10));
+		_populationParametersOld[i].c44 = randomDouble(1*pow(10,7),1*pow(10,10));
+
 		_populationParametersOld[i].c22 = _populationParametersOld[i].c11;
 		_populationParametersOld[i].c33 = _populationParametersOld[i].c11;
-		_populationParametersOld[i].c44 = (randomDouble(0,1))*pow(10,9);
+		_populationParametersOld[i].c12 = _populationParametersOld[i].c11 - 2*(_populationParametersOld[i].c44);
+		_populationParametersOld[i].c13 = _populationParametersOld[i].c11 - 2*(_populationParametersOld[i].c44);
+		_populationParametersOld[i].c23 = _populationParametersOld[i].c11 - 2*(_populationParametersOld[i].c44);
 		_populationParametersOld[i].c55 = _populationParametersOld[i].c44;
 		_populationParametersOld[i].c66 = _populationParametersOld[i].c44;
-		_populationParametersOld[i].c12 = (randomDouble(0,1))*pow(10,9);
-		_populationParametersOld[i].c13 = _populationParametersOld[i].c12;
-		_populationParametersOld[i].c23 = _populationParametersOld[i].c12;*/
-		
+
+	/*	
 		_populationParametersOld[i].c11 = 0.52296e+9;
 		_populationParametersOld[i].c22 = _populationParametersOld[i].c11;
 		_populationParametersOld[i].c33 = _populationParametersOld[i].c11;
@@ -101,7 +103,7 @@ void GeneticAlgorithm::initializeParameters(double* dataSet, int dataSetLength, 
 		_populationParametersOld[i].c66 = _populationParametersOld[i].c44;
 		_populationParametersOld[i].c12 = 0.19721e+9;
 		_populationParametersOld[i].c13 = _populationParametersOld[i].c12;
-		_populationParametersOld[i].c23 = _populationParametersOld[i].c12;
+		_populationParametersOld[i].c23 = _populationParametersOld[i].c12;*/
 	
 		_populationParametersOld[i].chiSq = calculateResidual(&_populationParametersOld[i],0);
 	
@@ -198,22 +200,46 @@ double GeneticAlgorithm::calculateResidual(Parameters::fitParameters * parameter
 	
 		paramPointer++;
 	}
-		
+		// RIGHT NOW IT JUST OVERWRIES THE PREVIOUS CHISQ, SO ALWAYS PICKS MAX MISSING PEAKS
+	//*** FIXED?
 	double * frequencies = calculateFrequencies(_paramArray[threadID]);
 	 
+	if(_nMissing > 0){
+	 double resTemp = INFINITY;
+			for(int firstMiss = 0; firstMiss < _dataSetLength; firstMiss++){
+				int flag = 0;
+				double total = 0;
+				for(int i = 0; i < _dataSetLength; i++){
+					if(firstMiss == i){
+						flag += _nMissing;						
+					}
+					_residualArray[threadID][i] = frequencies[i+flag] - _dataSet[i];
+				}	
+				
+				for(int i = 0; i < _dataSetLength; i++){
+					total += _residualArray[threadID][i]*_residualArray[threadID][i];
+				}
+				if(total < resTemp){
+					resTemp = total;
+				}
+			}
+		total = resTemp;
+	}
+	else{
+	
+			for(int i = 0; i < _dataSetLength; i++){
+
+				_residualArray[threadID][i] = frequencies[i] - _dataSet[i];
+		
+			}	
+		
+		for(int i = 0; i < _dataSetLength; i++){
+			total += _residualArray[threadID][i]*_residualArray[threadID][i];
+		}
+	}
+
 
 	
-#pragma ivdep
-	for(int i = 0; i < _dataSetLength; i++){
-
-		_residualArray[threadID][i] = frequencies[i] - _dataSet[i];
-		
-	}	
-
-#pragma ivdep
-	for(int i = 0; i < _dataSetLength; i++){
-		total += _residualArray[threadID][i]*_residualArray[threadID][i];
-	}
 
 	return total;
 }
@@ -624,7 +650,32 @@ int GeneticAlgorithm::compPnumb(const void* b1, const void* b2){ //compartor for
 
 }
 
+void GeneticAlgorithm::isotropicParameters(double * pOld, double * pNew, double * rand1, double * rand2, double * rand3){
+	
+		double p = randomDouble(0,1);
+		if(p > _crossingProbability){
+			pNew[0] = pOld[0];
+		}
+		else{
+			pNew[0] = rand1[0] + _scaleFactor*(rand2[0] - rand3[0]);
+		}
+		p = randomDouble(0,1);
+		if(p > _crossingProbability){
+			pNew[3] = pOld[3];
+		}
+		else{
+			pNew[3] = rand1[3] + _scaleFactor*(rand2[3] - rand3[3]);
+		}
+			pNew[1] = pNew[0];
+			pNew[2] = pNew[0];
+			pNew[4] = pNew[3];
+			pNew[5] = pNew[3];
+			pNew[6] = pNew[0] - 2 * pNew[3];
+			pNew[7] = pNew[0] - 2 * pNew[3];
+			pNew[8] = pNew[0] - 2 * pNew[3];
 
+		return;
+}
 
 void GeneticAlgorithm::calculateNewGenerations(int nGenerations){
 	double averageTime = 0;
@@ -643,28 +694,25 @@ void GeneticAlgorithm::calculateNewGenerations(int nGenerations){
 			double * pointerToNewVariable = &_populationParametersNew[j].c11;
 			double * pointerTog1Variable = &_populationParametersOld[ints1[j]].c11;
 			double * pointerTog2Variable = &_populationParametersOld[ints2[j]].c11;
-			double * pointerTog3Variable = &_populationParametersOld[ints3[j]].c11;
-		
-	//could be optimzed for vector arithmetic
-			for(int k = 0; k < nVars; k++){
+			double * pointerTog3Variable = &_populationParametersOld[ints3[j]].c11;	
+
+			isotropicParameters(pointerToOldVariable, pointerToNewVariable, pointerTog1Variable, pointerTog2Variable, pointerTog3Variable);
+	
+				//could be optimzed for vector arithmetic
+			/*for(int k = 0; k < nVars; k++){
 				double p = randomDouble(0,1);
 				if(p > _crossingProbability){
 					*pointerToNewVariable = *pointerToOldVariable;
 				}
 				else{
 					*pointerToNewVariable = *pointerTog1Variable + _scaleFactor*(*pointerTog2Variable - *pointerTog3Variable);
-					if((k == 8) || (k == 9))
-						if(*pointerToNewVariable > 1.0)
-							*pointerToNewVariable = *pointerToNewVariable - 1.0;
-						if(*pointerToNewVariable < -1.0)
-							*pointerToNewVariable = *pointerToNewVariable + 1.0;
 				}
 				pointerToNewVariable++;
 				pointerToOldVariable++;
 				pointerTog1Variable++;
 				pointerTog2Variable++;
 				pointerTog3Variable++;
-			}		
+			}	*/	
 		}	
 
 		totalTime = 0;

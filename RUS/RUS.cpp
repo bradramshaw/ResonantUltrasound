@@ -45,11 +45,11 @@ int _tmain(int argc, _TCHAR* argv[]) //main function
 	    GetLocalTime(&t);
 	    vslNewStream( & stream, VSL_BRNG_SFMT19937, t.wMilliseconds );
 	
-		DataExtractor extractor("E:/Users/Brad/Documents/GitHub/ResonantUltrasound/RUS/IsotropicCuboid.dat");
+		DataExtractor extractor("E:/Users/Brad/Documents/GitHub/ResonantUltrasound/RUS/IsotropicCuboid2.dat");
 		double * data = extractor.getDataArray();
 		int nPoints = extractor.getNumberOfLines();
 	
-		int order; // will store the max order of the polynomials to use
+		int order, nMissing; // will store the max order of the polynomials to use
 		double scale, cross;
 		cout << "Highest polynomial order? ";
 		cin >> order;
@@ -64,7 +64,11 @@ int _tmain(int argc, _TCHAR* argv[]) //main function
 		cin >> cross;
 		cout << endl;
 
-		GeneticAlgorithm geneticAlgorithm(data, nPoints,  40, scale, cross, order, xHL, yHL, zHL, density);
+		cout << "Maximum number of missing peaks? ";
+		cin >> nMissing;
+		cout << endl;
+
+		GeneticAlgorithm geneticAlgorithm(data, nPoints,  40, scale, cross, order, xHL, yHL, zHL, density, nMissing);
 	
 		geneticAlgorithm.calculateMinimum();
 		geneticAlgorithm.printMinimumParameters();	

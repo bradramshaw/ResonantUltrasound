@@ -1,5 +1,7 @@
 DONE Calculate the potential energy "gmat" integrals only once and store (hash too slow... but access in same order anyway so don't need).
 
-Fits 9 indep elastic constants only ATM... this is silly. 
+DONE Fits 9 indep elastic constants only ATM... this is silly. 
 
 kinetic matrix "emat" could take advantage of blocks... but no point really
+
+RIGHT NOW IT JUST OVERWRIES THE PREVIOUS CHISQ, SO ALWAYS PICKS MAX MISSING PEAKS

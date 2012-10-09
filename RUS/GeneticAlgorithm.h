@@ -5,7 +5,7 @@
 class GeneticAlgorithm
 {
 public:
-	GeneticAlgorithm(double* dataSet, int dataSetLength,  int nPopulation, double scaleFactor, double crossingProbability, int order, double xHL, double yHL, double zHL, double density);
+	GeneticAlgorithm(double* dataSet, int dataSetLength,  int nPopulation, double scaleFactor, double crossingProbability, int order, double xHL, double yHL, double zHL, double density, int nMissing);
 	~GeneticAlgorithm(void);
 	
 	void calculateMinimum();
@@ -26,6 +26,7 @@ private:
 
 	double _xHL, _yHL, _zHL;
 	double _density;
+	int _nMissing;
 
 	int _nPopulation,_dataSetLength;
 	double _scaleFactor, _crossingProbability;
@@ -53,6 +54,8 @@ private:
 	double * calcEigs(int R, double * emat, double * gmat);// eigenvalues (resonant frequencies squared, or maybe their inverse. anyway it's obvious)
 
 	double * calcGradient(int R, Basis::basisFunction * bFunctions);
+
+	void isotropicParameters(double * pOld, double * pNew, double * rand1, double * rand2, double * rand3);
 
 	double integrateBasis(Basis::basisFunction * b1, Basis::basisFunction * b2, double xmax, double ymax, double zmax); // This integrates  a pair of basis functions within the limits specified. Note that this assumes a parallelapiped, and takes "half" dimensions as inputs
 	double integrateGradBasis(Basis::basisFunction * b1, Basis::basisFunction * b2, int d1, int d2, double xmax, double ymax, double zmax); // integrates basis functions after differentiating with respect to one coordinate in each basis function of the pair. 
