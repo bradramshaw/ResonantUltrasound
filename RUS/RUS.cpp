@@ -14,11 +14,11 @@ static const double c12 = 0.19721e+9;
 static const double c13 = 0.19721e+9;
 static const double c23 = 0.19721e+9;
 
-static const double density = 15467; // density of the material in grams/meter^3. All units are SI
+static const double density = 7900; // density of the material in grams/meter^3. All units are SI
 
-static const double xHL = 0.0023724; // HALF length in the x direction, in meters.
-static const double yHL = 0.001885; // HALF length in the y direction
-static const double zHL = 0.00242095; // HALF length in the z direction.
+static const double xHL = 0.002495; // HALF length in the x direction, in meters.
+static const double yHL = 0.00223; // HALF length in the y direction
+static const double zHL = 0.001155; // HALF length in the z direction.
 
 
 //int parity(int k, int l, int m, int coord); // parity function looks at the symmetry of a basis function, ie x^2 * y * z^3. more below in the full function definition.
@@ -43,18 +43,31 @@ int _tmain(int argc, _TCHAR* argv[]) //main function
 	    GetLocalTime(&t);
 	    vslNewStream( & stream, VSL_BRNG_SFMT19937, t.wMilliseconds );
 	
-		DataExtractor extractor("E:/Users/Brad/Documents/GitHub/ResonantUltrasound/RUS/IsotropicCuboid.dat");
+		DataExtractor extractor("C:/Users/Brad/Documents/GitHub/ResonantUltrasound/RUS/IsotropicCuboid.dat");
 		double * data = extractor.getDataArray();
 		int nPoints = extractor.getNumberOfLines();
+		cout<<data[1]<<" "<<data[2]<<endl;
 	
-		int order; // will store the max order of the polynomials to use
+		int order, nMissing; // will store the max order of the polynomials to use
+		double scale, cross;
 		cout << "Highest polynomial order? ";
 		cin >> order;
 		cout  << endl;
 		int R = 3 * (order+1) * (order+2) * (order+3) / 6; // total dimension of the matrices 
 		cout << "R = " << R<<endl; // output that dimension to the user
+		cout << "Scale factor? ";
+		cin >> scale;
+		cout  << endl;
 
-		GeneticAlgorithm geneticAlgorithm(data, nPoints,  40, .3, .9, order, xHL, yHL, zHL, density);
+		cout << "Crossing Probability? ";
+		cin >> cross;
+		cout << endl;
+
+		cout << "Maximum number of missing peaks? ";
+		cin >> nMissing;
+		cout << endl;
+
+		GeneticAlgorithm geneticAlgorithm(data, nPoints,  100, scale, cross, order, xHL, yHL, zHL, density, nMissing);
 	
 		geneticAlgorithm.calculateMinimum();
 		geneticAlgorithm.printMinimumParameters();	
