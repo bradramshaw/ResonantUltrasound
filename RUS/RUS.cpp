@@ -14,11 +14,11 @@ static const double c12 = 0.19721e+9;
 static const double c13 = 0.19721e+9;
 static const double c23 = 0.19721e+9;
 
-static const double density = 7900; // density of the material in grams/meter^3. All units are SI
+static const double density = 6882; // density of the material in grams/meter^3. All units are SI
 
-static const double xHL = 0.002495; // HALF length in the x direction, in meters.
-static const double yHL = 0.00223; // HALF length in the y direction
-static const double zHL = 0.001155; // HALF length in the z direction.
+static const double xHL = 0.0003965; // HALF length in the x direction, in meters.
+static const double yHL = 0.000585; // HALF length in the y direction
+static const double zHL = 0.0002915; // HALF length in the z direction.
 
 
 //int parity(int k, int l, int m, int coord); // parity function looks at the symmetry of a basis function, ie x^2 * y * z^3. more below in the full function definition.
@@ -43,11 +43,10 @@ int _tmain(int argc, _TCHAR* argv[]) //main function
 	    GetLocalTime(&t);
 	    vslNewStream( & stream, VSL_BRNG_SFMT19937, t.wMilliseconds );
 	
-		DataExtractor extractor("C:/Users/Brad/Documents/GitHub/ResonantUltrasound/RUS/IsotropicCuboid.dat");
+		DataExtractor extractor("C:/Users/266616/Documents/GitHub/ResonantUltrasound/RUS/IsotropicCuboid.dat");
 		double * data = extractor.getDataArray();
 		int nPoints = extractor.getNumberOfLines();
-		cout<<data[1]<<" "<<data[2]<<endl;
-	
+		
 		int order, nMissing; // will store the max order of the polynomials to use
 		double scale, cross;
 		cout << "Highest polynomial order? ";

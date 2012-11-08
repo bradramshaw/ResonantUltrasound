@@ -83,16 +83,22 @@ void GeneticAlgorithm::initializeParameters(double* dataSet, int dataSetLength, 
 	/*	_populationParametersOld[i].c11 = (randomDouble(0,1))*pow(10,9);
 		_populationParametersOld[i].c44 = (randomDouble(0,1))*pow(10,9);*/
 
-		_populationParametersOld[i].c11 = (randomDouble(10,100))*pow(10,9);
-		_populationParametersOld[i].c44 = (randomDouble(10,100))*pow(10,9);
-
+		_populationParametersOld[i].c11 = (randomDouble(100,400))*pow(10,9);
 		_populationParametersOld[i].c22 = _populationParametersOld[i].c11;
-		_populationParametersOld[i].c33 = _populationParametersOld[i].c11;
-		_populationParametersOld[i].c12 = _populationParametersOld[i].c11 - 2*(_populationParametersOld[i].c44);
-		_populationParametersOld[i].c13 = _populationParametersOld[i].c11 - 2*(_populationParametersOld[i].c44);
-		_populationParametersOld[i].c23 = _populationParametersOld[i].c11 - 2*(_populationParametersOld[i].c44);
+
+		_populationParametersOld[i].c33 = (randomDouble(100,400))*pow(10,9);
+
+		_populationParametersOld[i].c44 = (randomDouble(40,150))*pow(10,9);
 		_populationParametersOld[i].c55 = _populationParametersOld[i].c44;
-		_populationParametersOld[i].c66 = _populationParametersOld[i].c44;
+
+		_populationParametersOld[i].c66 = (randomDouble(40,150))*pow(10,9);
+
+		_populationParametersOld[i].c12 = (randomDouble(40,150))*pow(10,9);
+
+		_populationParametersOld[i].c13 = (randomDouble(40,150))*pow(10,9);
+		_populationParametersOld[i].c23 = _populationParametersOld[i].c13;
+
+
 
 	/*	
 		_populationParametersOld[i].c11 = 0.52296e+9;
@@ -119,7 +125,7 @@ void GeneticAlgorithm::initializeParameters(double* dataSet, int dataSetLength, 
 		_minimumParameters.c13 = 1;
 		_minimumParameters.c23 = 1;
 
-		_minimumParameters.chiSq = INFINITE;
+		_minimumParameters.chiSq = std::numeric_limits<double>::infinity();
 }
 
 void GeneticAlgorithm::resetParameters(int nPopulation, double scaleFactor, double crossingProbability){
@@ -188,6 +194,17 @@ void GeneticAlgorithm::printMinimumParameters(){
 		out.precision(15);
 		out<<_minimumParameters.c11<<'\t'<<_minimumParameters.c22<<'\t'<<_minimumParameters.c33<<'\t'<<_minimumParameters.c44<<'\t'<<_minimumParameters.c55<<'\t'<<_minimumParameters.c66<<'\t'<<_minimumParameters.c12<<'\t'<<_minimumParameters.c13<<'\t'<<_minimumParameters.c23;
 		out.close();
+
+		std::cout<<"Measured"<<"\t"<<"Calculated"<<"\t"<<"%diff"<<std::endl;
+		double *frequencies = calculateFrequencies(&(_minimumParameters.c11));
+		for(int i = 0; i < _dataSetLength; i ++){
+			std::cout<<_dataSet[i]<<"\t"<<frequencies[i]<<"\t"<<(_dataSet[i] - frequencies[i])/(frequencies[i]) * 100<<std::endl;
+		}
+		for(int i = _dataSetLength; i < _dataSetLength+5; i ++){
+			std::cout<<"\t"<<"\t"<<frequencies[i]<<"\t"<<std::endl;
+		}
+		delete[] frequencies;
+
 }
 
 double GeneticAlgorithm::calculateResidual(Parameters::fitParameters * parameters, int threadID){
@@ -239,7 +256,7 @@ double GeneticAlgorithm::calculateResidual(Parameters::fitParameters * parameter
 	}
 
 
-	
+	delete[] frequencies;
 
 	return total;
 }
@@ -288,12 +305,19 @@ double * GeneticAlgorithm::calculateFrequencies(double * parameters){
 	double * temp = calcEigs(_R, emat, gmat);
 	//	QueryPerformanceCounter(&time2);
 	//std::cout<<"Time to memcpy: "<<1000*(double)(time2.QuadPart-time1.QuadPart)/(freq.QuadPart)<<"ms"<<std::endl<<std::endl;
-
+	
+	//for(int i  = 0; i < _R; i++){
+	//std::cout<<	(sqrt(temp[i]))/(2*3.1415926535897) << " ";	
+	//	
+	//}
+	//std::cout<<std::endl;
+	
 	for(int i  = 6; i < _R; i++){
 		frequencies[i-6] = (sqrt(temp[i]))/(2*3.1415926535897);	
+		
 	}
 	
-
+	
 	delete [] emat;
 	delete [] gmat;
 	delete [] temp;
@@ -678,6 +702,63 @@ void GeneticAlgorithm::isotropicParameters(double * pOld, double * pNew, double 
 		return;
 }
 
+void GeneticAlgorithm::tetragonalParameters(double * pOld, double * pNew, double * rand1, double * rand2, double * rand3){
+	
+		double p = randomDouble(0,1);
+		if(p > _crossingProbability){
+			pNew[0] = pOld[0];
+		}
+		else{
+			pNew[0] = rand1[0] + _scaleFactor*(rand2[0] - rand3[0]);
+		}
+
+		p = randomDouble(0,1);
+		if(p > _crossingProbability){
+			pNew[2] = pOld[2];
+		}
+		else{
+			pNew[2] = rand1[2] + _scaleFactor*(rand2[2] - rand3[2]);
+		}
+
+		p = randomDouble(0,1);
+		if(p > _crossingProbability){
+			pNew[3] = pOld[3];
+		}
+		else{
+			pNew[3] = rand1[3] + _scaleFactor*(rand2[3] - rand3[3]);
+		}
+
+		p = randomDouble(0,1);
+		if(p > _crossingProbability){
+			pNew[5] = pOld[5];
+		}
+		else{
+			pNew[5] = rand1[5] + _scaleFactor*(rand2[5] - rand3[5]);
+		}
+
+			p = randomDouble(0,1);
+		if(p > _crossingProbability){
+			pNew[6] = pOld[6];
+		}
+		else{
+			pNew[6] = rand1[6] + _scaleFactor*(rand2[6] - rand3[6]);
+		}
+
+			p = randomDouble(0,1);
+		if(p > _crossingProbability){
+			pNew[7] = pOld[7];
+		}
+		else{
+			pNew[7] = rand1[7] + _scaleFactor*(rand2[7] - rand3[7]);
+		}
+
+			pNew[1] = pNew[0];
+			pNew[4] = pNew[3];
+			pNew[8] = pNew[7];
+		
+		return;
+}
+
 void GeneticAlgorithm::calculateNewGenerations(int nGenerations){
 	double averageTime = 0;
 
@@ -697,7 +778,7 @@ void GeneticAlgorithm::calculateNewGenerations(int nGenerations){
 			double * pointerTog2Variable = &_populationParametersOld[ints2[j]].c11;
 			double * pointerTog3Variable = &_populationParametersOld[ints3[j]].c11;	
 
-			isotropicParameters(pointerToOldVariable, pointerToNewVariable, pointerTog1Variable, pointerTog2Variable, pointerTog3Variable);
+			tetragonalParameters(pointerToOldVariable, pointerToNewVariable, pointerTog1Variable, pointerTog2Variable, pointerTog3Variable);
 	
 				//could be optimzed for vector arithmetic
 			/*for(int k = 0; k < nVars; k++){
