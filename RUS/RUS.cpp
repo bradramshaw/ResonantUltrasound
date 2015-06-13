@@ -95,7 +95,7 @@ int _tmain(int argc, _TCHAR* argv[]) //main function
 		geneticAlgorithm.calculateMinimum();
 		geneticAlgorithm.printMinimumParameters();	
 
-	while(true){ // bad programming...dfgsdf
+	while(true){ // bad programming...
 
 		int nGens;
 		cout<<"Number of generations: ";
