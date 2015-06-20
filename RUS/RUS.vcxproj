@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -72,6 +72,7 @@
       <GenerateAlternateCodePaths>SSE41</GenerateAlternateCodePaths>
       <UseProcessorExtensions>HOST</UseProcessorExtensions>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <AdditionalOptions>/Qoption,cpp,--pch_control=536870912 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -110,6 +111,8 @@
     <None Include="Diamond.dat" />
     <None Include="Hg1201.dat" />
     <None Include="Hg1201_v2.dat" />
+    <None Include="Hg1201_v3.dat" />
+    <None Include="Hg1201_v4.dat" />
     <None Include="IsotropicCuboid.dat" />
     <None Include="LSCO.dat" />
     <None Include="Nb.dat" />

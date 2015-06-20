@@ -67,7 +67,7 @@ int _tmain(int argc, _TCHAR* argv[]) //main function
 	    GetLocalTime(&t);
 	    vslNewStream( & stream, VSL_BRNG_SFMT19937, t.wMilliseconds );
 	
-		DataExtractor extractor("../RUS/Hg1201_v2.dat");
+		DataExtractor extractor("../RUS/Hg1201_v3.dat");
 		double * data = extractor.getDataArray();
 		int nPoints = extractor.getNumberOfLines();
 		
