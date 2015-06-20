@@ -118,7 +118,7 @@ double GeneticAlgorithm::calculateResidual(Parameters::fitParameters * parameter
 				for(int m = 0; m < totalLength; m++){
 					if(freqVectTemp[m] != 0){
 			
-					_residualArray[threadID][m] = (frequencies[m] - freqVectTemp[m]);
+					_residualArray[threadID][m] = (frequencies[m] - freqVectTemp[m])/(frequencies[m]);
 
 						
 					}
@@ -157,7 +157,7 @@ double GeneticAlgorithm::calculateResidual(Parameters::fitParameters * parameter
 	else{	
 			for(int i = 0; i < _dataSetLength; i++){
 				if(_dataSet[i]!= 0){
-				_residualArray[threadID][i] = (frequencies[i] - _dataSet[i]);
+				_residualArray[threadID][i] = (frequencies[i] - _dataSet[i])/(frequencies[i]);
 				}
 				else{
 					_residualArray[threadID][i] = 0;
@@ -370,10 +370,13 @@ void GeneticAlgorithm::exportChiSq(){
 
 void GeneticAlgorithm::printMinimumParameters(){
 
+		double rms = 100 * sqrt(_minimumParameters.chiSq/(_nMissing + _dataSetLength));
+
 	std::cout<<std::left<<std::setfill(' ')<<std::setw(10)<<"c11"<<std::setw(10)<<"c22"<<std::setw(10)<<"c33"<<std::setw(10)<<"c13"<<std::setw(10)<<"c23"<<std::setw(10)<<"c12"<<std::setw(10)<<"c44"<<std::setw(10)<<"c55"<<std::setw(10)<<"c66"<<std::endl;
-	std::cout<<std::left<<std::setfill(' ')<<std::setw(10)<<_minimumParameters.c11/(pow(10,9))<<std::setw(10)<<_minimumParameters.c22/(pow(10,9))<<std::setw(10)<<_minimumParameters.c33/(pow(10,9))<<std::setw(10)<<_minimumParameters.c13/(pow(10,9))<<std::setw(10)<<_minimumParameters.c23/(pow(10,9))<<std::setw(10)<<_minimumParameters.c12/(pow(10,9))<<std::setw(10)<<_minimumParameters.c44/(pow(10,9))<<std::setw(10)<<_minimumParameters.c55/(pow(10,9))<<std::setw(10)<<_minimumParameters.c66/(pow(10,9))<<std::endl<<"Residual: "<<_minimumParameters.chiSq<<std::endl<<std::endl;
+	std::cout<<std::left<<std::setfill(' ')<<std::setw(10)<<_minimumParameters.c11/(pow(10,9))<<std::setw(10)<<_minimumParameters.c22/(pow(10,9))<<std::setw(10)<<_minimumParameters.c33/(pow(10,9))<<std::setw(10)<<_minimumParameters.c13/(pow(10,9))<<std::setw(10)<<_minimumParameters.c23/(pow(10,9))<<std::setw(10)<<_minimumParameters.c12/(pow(10,9))<<std::setw(10)<<_minimumParameters.c44/(pow(10,9))<<std::setw(10)<<_minimumParameters.c55/(pow(10,9))<<std::setw(10)<<_minimumParameters.c66/(pow(10,9))<<std::endl<<std::endl<<"Residual: "<< rms <<" %"<<std::endl<<std::endl;
 
 	//std::cout<<"c11: "<<_minimumParameters.c11<<" "<<"c22: "<<_minimumParameters.c22<<" "<<"c33: "<<_minimumParameters.c33<<std::endl<<"c44: "<<_minimumParameters.c44<<" "<<"c55: "<<_minimumParameters.c55<<" "<<"c66: "<<_minimumParameters.c66<<"c12: "<<_minimumParameters.c12<<" "<<"c13: "<<_minimumParameters.c13<<" "<<"c23: "<<_minimumParameters.c23<<std::endl<<"Residual: "<<_minimumParameters.chiSq<<std::endl<<std::endl;
+	
 		std::ofstream out;
 		out.open("output.dat");
 		out.precision(15);
@@ -400,7 +403,7 @@ void GeneticAlgorithm::printMinimumParameters(){
 			for(int i = 0; i < _dataSetLength+_nMissing; i ++){
 				std::cout<<std::setw(20)<<freqVect[i]<<std::setw(20)<<frequencies[i]<<std::setw(20)<<(freqVect[i] - frequencies[i])/(frequencies[i]) * 100<<std::endl;
 			}
-			for(int i = _dataSetLength+_nMissing; i < _dataSetLength+_nMissing+ 30; i ++){
+			for(int i = _dataSetLength+_nMissing; i < _dataSetLength+_nMissing+ 10; i ++){
 				std::cout<<std::setw(20)<<' '<<frequencies[i]<<std::endl;
 		}
 		}
@@ -411,7 +414,7 @@ void GeneticAlgorithm::printMinimumParameters(){
 		for(int i = 0; i < _dataSetLength; i ++){
 			std::cout<<std::setw(20)<<_dataSet[i]<<std::setw(20)<<frequencies[i]<<std::setw(20)<<(_dataSet[i] - frequencies[i])/(frequencies[i]) * 100<<std::endl;
 		}
-		for(int i = _dataSetLength+_nMissing; i < _dataSetLength+_nMissing+ 30; i ++){
+		for(int i = _dataSetLength+_nMissing; i < _dataSetLength+_nMissing+ 10; i ++){
 			std::cout<<std::setw(20)<<' '<<frequencies[i]<<std::endl;
 		}
 
