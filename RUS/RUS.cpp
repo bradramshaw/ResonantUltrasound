@@ -67,7 +67,7 @@ int _tmain(int argc, _TCHAR* argv[]) //main function
 	    GetLocalTime(&t);
 	    vslNewStream( & stream, VSL_BRNG_SFMT19937, t.wMilliseconds );
 	
-		DataExtractor extractor("../RUS/Hg1201_80K.dat");
+		DataExtractor extractor("../RUS/Hg1201_295K.dat");
 		double * data = extractor.getDataArray();
 		int nPoints = extractor.getNumberOfLines();
 		
@@ -90,7 +90,7 @@ int _tmain(int argc, _TCHAR* argv[]) //main function
 		cin >> nMissing;
 		cout << endl;
 
-		GeneticAlgorithm geneticAlgorithm(data, nPoints, 100, scale, cross, order, xHL, yHL, zHL, density, nMissing);
+		GeneticAlgorithm geneticAlgorithm(data, nPoints, 50, scale, cross, order, xHL, yHL, zHL, density, nMissing);
 	
 		geneticAlgorithm.calculateMinimum();
 		geneticAlgorithm.printMinimumParameters();	
