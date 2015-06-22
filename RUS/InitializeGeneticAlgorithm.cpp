@@ -191,17 +191,17 @@ void GeneticAlgorithm::initializeParameters(double* dataSet, int dataSetLength, 
 
 		_populationParametersOld[i].chiSq = calculateResidual(&_populationParametersOld[i],0);/// ***Cubic PbTe*/
 
-		_populationParametersOld[i].c11 = (randomDouble(110,145))*pow(10,9);
+		_populationParametersOld[i].c11 = (randomDouble(135,148))*pow(10,9);
 		_populationParametersOld[i].c22 = _populationParametersOld[i].c11;
 		
-		_populationParametersOld[i].c33 = (randomDouble(110,140))*pow(10,9);
+		_populationParametersOld[i].c33 = (randomDouble(125,140))*pow(10,9);
 
-		_populationParametersOld[i].c44 = (randomDouble(10,14))*pow(10,9);
+		_populationParametersOld[i].c44 = (randomDouble(12.2,13.2))*pow(10,9);
 		_populationParametersOld[i].c55 = _populationParametersOld[i].c44;
 		
-		_populationParametersOld[i].c66 = (randomDouble(40,55))*pow(10,9);
+		_populationParametersOld[i].c66 = (randomDouble(46,49))*pow(10,9);
 
-		_populationParametersOld[i].c12 = (randomDouble(35,55))*pow(10,9);
+		_populationParametersOld[i].c12 = (randomDouble(42,50))*pow(10,9);
 	
 		_populationParametersOld[i].c13 = (randomDouble(20,50))*pow(10,9);
 		_populationParametersOld[i].c23 = _populationParametersOld[i].c13; 
