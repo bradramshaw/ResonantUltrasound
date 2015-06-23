@@ -90,7 +90,7 @@ int _tmain(int argc, _TCHAR* argv[]) //main function
 		cin >> nMissing;
 		cout << endl;
 
-		GeneticAlgorithm geneticAlgorithm(data, nPoints, 50, scale, cross, order, xHL, yHL, zHL, density, nMissing);
+		GeneticAlgorithm geneticAlgorithm(data, nPoints, 100, scale, cross, order, xHL, yHL, zHL, density, nMissing);
 	
 		geneticAlgorithm.calculateMinimum();
 		geneticAlgorithm.printMinimumParameters();	
