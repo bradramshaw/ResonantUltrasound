@@ -48,6 +48,12 @@ static const double xHL = 0.000823/2; // HALF length in the x direction, in mete
 static const double yHL = 0.000674/2; // HALF length in the y direction
 static const double zHL = 0.000120/2; // HALF length in the z direction. Hg1201****
 
+//static const double density = 6890; // density of the material in (Kg?) grams/meter^3. All units are SI
+//
+//static const double xHL = 0.001239/2; // HALF length in the x direction, in meters.
+//static const double yHL = 0.00099/2; // HALF length in the y direction
+//static const double zHL = 0.00033/2; // HALF length in the z direction. Hg1201****
+
 
 	/*		QueryPerformanceCounter(&time1);*/
 	
@@ -67,7 +73,7 @@ int _tmain(int argc, _TCHAR* argv[]) //main function
 	    GetLocalTime(&t);
 	    vslNewStream( & stream, VSL_BRNG_SFMT19937, t.wMilliseconds );
 	
-		DataExtractor extractor("../RUS/Hg1201_295K.dat");
+		DataExtractor extractor("../RUS/HG1201_295K.dat");
 		double * data = extractor.getDataArray();
 		int nPoints = extractor.getNumberOfLines();
 		
