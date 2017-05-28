@@ -31,7 +31,7 @@ GeneticAlgorithm::GeneticAlgorithm(double* dataSet, int dataSetLength,  int nPop
 
 	initialiseMatrices();
 
-	initializeParameters(dataSet, dataSetLength, nPopulation, scaleFactor, crossingProbability);	
+	initializeParameters(dataSet, dataSetLength, nPopulation, scaleFactor, crossingProbability, nMissing);	
 
 	
 	
@@ -68,6 +68,7 @@ void GeneticAlgorithm::calculateMinimum(){
 
 double GeneticAlgorithm::calculateResidual(Parameters::fitParameters * parameters, int threadID){
 	
+
 	double total = 0;	
 	double * paramPointer = &(parameters->c11);	
 
@@ -80,47 +81,49 @@ double GeneticAlgorithm::calculateResidual(Parameters::fitParameters * parameter
 	
 	double * frequencies = calculateFrequencies(_paramArray[threadID]);
 		
-	 
 
 	if(_nMissing > 0){
-	 std::vector<double> freqVect(0);
-
+	 std::vector<double> freqVect;
 
 	 for(int i = 0; i < _dataSetLength; i ++){
 		 freqVect.push_back(_dataSet[i]);
 	 }
 	 std::vector<double>::iterator iter;
 
-
-	 double resTemp = INFINITY;
+	 double resTemp = INFINITY; 
 	 int totalLength = _nMissing + _dataSetLength;
 	 long * missInd = new long[_nMissing];
-	 bool * flag = new bool;
-	 *flag = false;
+
+	 bool * flag = new bool(false);
 	 long combs = nCombs(totalLength, _nMissing);
 
+	 
 	 for(int i = 0; i < _nMissing; i++){
 			missInd[i] = i;
 		}
-	
+
 		for(int i = 0; i < combs; i ++){
 			total = 0;
 			std::vector<double> freqVectTemp(freqVect);
+
 			iter = freqVectTemp.begin();
-			
 				for(int j = 0; j < _nMissing; j ++){
+
 					iter += missInd[j];
+
 					freqVectTemp.insert(iter, 0);
+
 					iter = freqVectTemp.begin();
+
 				}
 
-				
 				for(int m = 0; m < totalLength; m++){
+			
 					if(freqVectTemp[m] != 0){
 			
-					_residualArray[threadID][m] = (frequencies[m] - freqVectTemp[m])/(frequencies[m]);
-
-						
+					
+						_residualArray[threadID][m] = (frequencies[m] - freqVectTemp[m])/(frequencies[m]);
+								
 					}
 				
 					else{
@@ -129,14 +132,11 @@ double GeneticAlgorithm::calculateResidual(Parameters::fitParameters * parameter
 					}	
 				
 				}	
-	
 				for(int m = 0; m < totalLength; m++){
+				
 				
 					total += _residualArray[threadID][m]*_residualArray[threadID][m];
 				}
-			
-			
-
 				if(total < resTemp){
 					resTemp = total;
 			
@@ -144,11 +144,9 @@ double GeneticAlgorithm::calculateResidual(Parameters::fitParameters * parameter
 						parameters->missFreq[p] = missInd[p];
 					}
 				}
-			
 				shiftInd(missInd, _nMissing -1, _nMissing, totalLength, flag);
-
 			}
-		
+
 		total = resTemp;
 	delete[] missInd;
 	delete flag;
@@ -170,10 +168,7 @@ double GeneticAlgorithm::calculateResidual(Parameters::fitParameters * parameter
 		}
 	}
 
-
-	delete[] frequencies;
-
-
+	free(frequencies);
 	return total;
 }
 
@@ -202,9 +197,9 @@ double * GeneticAlgorithm::calculateFrequencies(double * parameters){
 	}
 	
 	
-	delete [] emat;
-	delete [] gmat;
-	delete [] temp;
+	delete[] emat;
+	delete[] gmat;
+	free(temp);
 	for(int i = 0; i < 3; i ++){
 		for(int j = 0; j < 3; j++){
 			for(int k = 0; k < 3; k++){
@@ -224,7 +219,6 @@ double * GeneticAlgorithm::calculateFrequencies(double * parameters){
 void GeneticAlgorithm::calculateNewGenerations(int nGenerations){
 	double averageTime = 0;
 	
-
 	for(int i = 0; i < nGenerations; i++){
 
 
@@ -232,7 +226,6 @@ void GeneticAlgorithm::calculateNewGenerations(int nGenerations){
 	 viRngUniform( VSL_RNG_METHOD_UNIFORM_STD, stream, _nPopulation, ints2, 0, _nPopulation );
 	 viRngUniform( VSL_RNG_METHOD_UNIFORM_STD, stream, _nPopulation, ints3, 0, _nPopulation );
 	 viRngUniform( VSL_RNG_METHOD_UNIFORM_STD, stream, _nPopulation, shuffleIndex, 0, _nPopulation );
-
 	
 	
 	 //Parameters::fitParameters  temp;
@@ -277,7 +270,7 @@ void GeneticAlgorithm::calculateNewGenerations(int nGenerations){
 		Parameters::arrayBounds threadBounds[nThreads];
 		threadContents threadContents[nThreads];
 
-
+	
 		
 
 		for(int m = 0; m<nThreads; m++){		
@@ -302,22 +295,22 @@ void GeneticAlgorithm::calculateNewGenerations(int nGenerations){
 			AfxBeginThread(startResidualThread, (LPVOID) &threadContents[m]);		
 			
 		}
-	
+		
 	//	std::cout<<s2.lTotalCount<<std::endl;
-
 		WaitForMultipleObjects(nThreads,threadEvents,TRUE,INFINITE);	
-
+		
 		
 		for(int timerIndex = 0; timerIndex < nThreads; timerIndex++){
 		totalTime += threadContents[timerIndex].arrayBounds.time;
 		}
-		
+	
 		averageTime +=totalTime;
 		
 		mkl_free_buffers();
 	
 	/*	calculateMinimum();
 		exportChiSq();*/
+	
 	}
 	std::cout<<"Average time per generation for a thread: "<<averageTime/(nThreads*nGenerations)<<"ms"<<std::endl<<std::endl;
 		
@@ -332,7 +325,8 @@ UINT GeneticAlgorithm::startResidualThread(LPVOID param){
 
 void GeneticAlgorithm::residualCalculatingThread(Parameters::arrayBounds * arrayBounds){
 	
-		
+	
+
 	LARGE_INTEGER time1,time2;
 
 
@@ -369,7 +363,7 @@ void GeneticAlgorithm::exportChiSq(){
 }
 
 void GeneticAlgorithm::printMinimumParameters(){
-
+	
 		double rms = 100 * sqrt(_minimumParameters.chiSq/(_nMissing + _dataSetLength));
 
 	std::cout<<std::left<<std::setfill(' ')<<std::setw(10)<<"c11"<<std::setw(10)<<"c22"<<std::setw(10)<<"c33"<<std::setw(10)<<"c13"<<std::setw(10)<<"c23"<<std::setw(10)<<"c12"<<std::setw(10)<<"c44"<<std::setw(10)<<"c55"<<std::setw(10)<<"c66"<<std::endl;
@@ -386,7 +380,7 @@ void GeneticAlgorithm::printMinimumParameters(){
 
 	double *frequencies = calculateFrequencies(&(_minimumParameters.c11));
 		if(_nMissing > 0){
-			std::vector<double> freqVect(0);
+			std::vector<double> freqVect;
 			 for(int i = 0; i < _dataSetLength; i ++){
 			 freqVect.push_back(_dataSet[i]);
 		 }
@@ -419,16 +413,21 @@ void GeneticAlgorithm::printMinimumParameters(){
 		}
 
 		}
+		
 	
-
 		std::ofstream fout;
 		fout.open("freqoutput.dat");
+		
 		fout.precision(15);
-		for(int i = 0; i < _R; i ++){
+		
+		for(int i = 0; i < _R/2; i ++){
+		
 			fout<<frequencies[i]<<std::endl;
 		}
-		fout.close();
 
+		fout.close();
+		
 		delete[] frequencies;
+	
 
 }

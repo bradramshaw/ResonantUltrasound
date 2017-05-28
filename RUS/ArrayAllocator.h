@@ -14,6 +14,6 @@ namespace ArrayAllocator
 	 template <typename T>  void  FreeDynamicArray(T* dArray) // deallocates the same
 	{
 		
-		delete dArray;
+		delete [] dArray;
 	}
 };

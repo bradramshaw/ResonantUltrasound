@@ -42,11 +42,11 @@ using namespace std;
 //static const double yHL = 0.0015/2; // HALF length in the y direction
 //static const double zHL = 0.002/2; // HALF length in the z direction. Diamond****
 
-static const double density = 6700; // density of the material in (Kg?) grams/meter^3. All units are SI
-
-static const double xHL = 0.000823/2; // HALF length in the x direction, in meters.
-static const double yHL = 0.000674/2; // HALF length in the y direction
-static const double zHL = 0.000120/2; // HALF length in the z direction. Hg1201****
+//static const double density = 6700; // density of the material in (Kg?) grams/meter^3. All units are SI
+//
+//static const double xHL = 0.000823/2; // HALF length in the x direction, in meters.
+//static const double yHL = 0.000674/2; // HALF length in the y direction
+//static const double zHL = 0.000120/2; // HALF length in the z direction. Hg1201****
 
 //static const double density = 6890; // density of the material in (Kg?) grams/meter^3. All units are SI
 //
@@ -54,6 +54,11 @@ static const double zHL = 0.000120/2; // HALF length in the z direction. Hg1201*
 //static const double yHL = 0.00099/2; // HALF length in the y direction
 //static const double zHL = 0.00033/2; // HALF length in the z direction. Hg1201****
 
+static const double density = 8313; // density of the material in (Kg?) grams/meter^3. All units are SI
+
+static const double xHL = 0.00110 / 2; // HALF length in the x direction, in meters.
+static const double yHL = 0.00101 / 2; // HALF length in the y direction
+static const double zHL = 0.00061  / 2; // HALF length in the z direction. CeRhIn5****
 
 	/*		QueryPerformanceCounter(&time1);*/
 	
@@ -73,7 +78,8 @@ int _tmain(int argc, _TCHAR* argv[]) //main function
 	    GetLocalTime(&t);
 	    vslNewStream( & stream, VSL_BRNG_SFMT19937, t.wMilliseconds );
 	
-		DataExtractor extractor("../RUS/HG1201_295K.dat");
+
+		DataExtractor extractor("../RUS/CeRhIn5_5b.dat");
 		double * data = extractor.getDataArray();
 		int nPoints = extractor.getNumberOfLines();
 		
@@ -97,10 +103,11 @@ int _tmain(int argc, _TCHAR* argv[]) //main function
 		cout << endl;
 
 		GeneticAlgorithm geneticAlgorithm(data, nPoints, 50, scale, cross, order, xHL, yHL, zHL, density, nMissing);
-	
+		
 		geneticAlgorithm.calculateMinimum();
+		
 		geneticAlgorithm.printMinimumParameters();	
-
+	
 	while(true){ // bad programming...
 
 		int nGens;

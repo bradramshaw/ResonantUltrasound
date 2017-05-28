@@ -86,7 +86,7 @@ private:
 	Parameters::fitParameters _minimumParameters;
 
 	void initializeRandomNumberGenerators();
-	void initializeParameters(double* dataSet, int dataSetLength, int nPopulation, double scaleFactor, double crossingProbability);
+	void initializeParameters(double* dataSet, int dataSetLength, int nPopulation, double scaleFactor, double crossingProbability, double nMissing);
 	double randomDouble(double min, double max);
 	double calculateResidual(Parameters::fitParameters * parameters,int threadID);
 	double * calculateFrequencies(double * parameters);

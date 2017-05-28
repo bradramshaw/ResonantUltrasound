@@ -70,6 +70,9 @@
     <None Include="Hg1201_80K.dat">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="CeRhIn5_5b.dat">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
